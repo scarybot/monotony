@@ -1,8 +1,13 @@
 require 'monopoly_engine/square'
 
 module MonopolyEngine
+	# Represents any purchasable property tile.
 	class PurchasableProperty < Square
 		attr_accessor :value, :cost, :is_mortgaged, :owner, :mortgage_value
+		# @param opts [Hash]
+		# @option opts [Integer] :value Value of the property.
+		# @option opts [Integer] :mortgage_value Mortgaged value of the property.
+		# @option opts [Symbol] :set A symbol identifying this property as a member of a set of properties.
 		def initialize(opts)
 			super
 			@game = nil
@@ -10,6 +15,10 @@ module MonopolyEngine
 			@value = opts[:value]
 			@mortgage_value = opts[:mortgage_value]
 		end
+
+		# Transfer a property to another player, in return for currency.
+		# @param player [Player] Receiving player
+		# @param amount [Integer] Sale value
 		def sell_to(player, amount = cost)
 			if player.currency < amount then
 				puts '[%s] Unable to buy %s! (short of cash by £%d)' % [ player.name, @name, ( amount - player.currency ) ]
@@ -29,12 +38,20 @@ module MonopolyEngine
 				@owner = player
 			end
 		end
+
+		# Returns the number of properties in the set containing self.
+		# @return [Integer]
 		def number_in_set(game = @owner.game)
 			properties_in_set(game).count
 		end
+
+		# Returns property objects for all properties in the same set as self.
+		# @return [Array<Square>]
 		def properties_in_set(game = @owner.game)
 			game.board.select { |p| p.is_a? self.class }.select { |p| p.set == @set }
 		end
+
+		# @return [Integer] the current cost to either purchase this property unowned, or unmortgage this property if mortgaged.
 		def cost
 			if is_mortgaged?
 				@value * 1.1
@@ -43,14 +60,19 @@ module MonopolyEngine
 			end
 		end
 
+		# @return [Integer] the number of properties in the same set as this one which are currenly owned by players.
 		def number_of_set_owned
 			if @owner
 				@owner.properties.select { |p| p.is_a? self.class }.select { |p| p.set == @set }.count
 			end
 		end
+
+		# Offer to purchase this property from another player, thus calling the :trade_proposed behaviour of the receiving player.
 		def place_offer(proposer, amount)
 			@owner.behaviour[:trade_proposed].call(@owner.game, @owner, proposer, self, amount) if proposer.currency >= amount
 		end
+
+		# @returns [Boolean] whether or not this property is part of a complete set owned by a single player.
 		def set_owned?
 			if @owner
 				player_basic_properties = @owner.properties.select { |p| p.is_a? self.class }
@@ -62,12 +84,16 @@ module MonopolyEngine
 				false
 			end
 		end
+
+		# Gives a property to another player. Available for use as part of a trading behaviour.
 		def give_to(player)
 			puts '[%s] Gave %s to %s' % [ @owner.name, @name, player.name ]
 			@owner.properties.delete self
 			@owner = player
 			player.properties << self
 		end
+
+		# Mortgage the property.
 		def mortgage
 			unless is_mortgaged?
 				puts '[%s] Mortgaged %s for £%d' % [ @owner.name, @name, @mortgage_value ]
@@ -77,6 +103,8 @@ module MonopolyEngine
 			end
 			self
 		end
+
+		# Unmortgage the property.
 		def unmortgage
 			if is_mortgaged?
 				if @owner.currency > cost
@@ -91,6 +119,8 @@ module MonopolyEngine
 			end
 			self
 		end
+
+		# @return [Boolean] whether or not the property is currently mortgaged.
 		def is_mortgaged?
 			@is_mortgaged
 		end

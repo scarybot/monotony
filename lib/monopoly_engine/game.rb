@@ -1,28 +1,78 @@
 module MonopolyEngine
 	class Game
-		attr_accessor :hits, :board, :players, :num_dice, :die_size, :starting_currency, :available_properties, :chance, :community_chest, :bank_balance, :free_parking_balance, :player_starting_balance, :go_amount, :max_turns_in_jail, :last_roll, :turn, :completed, :num_houses, :num_hotels
+		# @return [Hash] Returns a hash containing the number of times each Square has been landed on.
+		attr_accessor :hits
+		# @return [Array<Square>] Returns an array representing the current game board.
+		attr_accessor :board
+		# @return [Boolean] Returns an array of players registered to the game.
+		attr_accessor :players
+		attr_accessor :num_dice, :die_size, :starting_currency, :chance, :community_chest, :bank_balance, :free_parking_balance, :player_starting_balance, :go_amount, :max_turns_in_jail, :last_roll, :turn, :num_houses, :num_hotels
+		# @return [Boolean] Returns whether the game has been completed.
+		attr_accessor :completed
+		# @return [Array<Purchasable>] Returns an array of properties yet to be purchased by players.
+		attr_accessor :available_properties
 
+		# Creates a new Monopoly game
+		# @param [Hash] opts Game configuration options
+		# @option opts [Integer] :free_parking_balance The amount of money stored on Free Parking at the beginning of the game (unofficial game feature in widespread use).
+		# @option opts [Integer] :bank_balance Starting balance of the bank.
+		# @option opts [Integer] :max_turns_in_jail The maximum number of turns a player may spend in jail before being forced to pay a fine to leave.
+		# @option opts [Integer] :go_amount The amount of money given to a player when they pass GO.
+		# @option opts [Integer] :num_dice  The number of dice a player will roll on their turn.
+		# @option opts [Integer] :die_size The number of sides per dice.
+		# @option opts [Integer] :num_houses The total number of houses available to be purchased.
+		# @option opts [Integer] :num_hotels The total number of hotels available to be purchased
+		# @option opts [Integer] :starting_currency The amount of currency given to each player at the start of the game.
+		# @option opts [Integer, Array<Player>] :players If an array of Player objects are given, then add them to the game. If an integer is given, generate that number of players with default options, and add those to the game instead. 
+		# @return [String] the object converted into the expected format.
 		def initialize(opts)
+			opts = {
+				free_parking_balance: 0,
+				bank_balance: 12755,
+				max_turns_in_jail: 3,
+				go_amount: 200,
+				num_dice: 2,
+				die_size: 6,
+				num_houses: 48,
+				num_hotels: 12,
+				starting_currency: 1500,
+				players: 4,
+				variant: MonopolyEngine::DefaultLayout
+			}.merge(opts)
+
+			random_player_names = %w{Andy Brian Katie Cathy Tine Jody James Ryan Lucy Pierre George Gregor Tracy Lia Andoni Ralph San}
+
+			@board = opts[:variant]::BOARD
+			@chance_all = opts[:variant]::CHANCE
+			@community_chest_all = opts[:variant]::COMMUNITY_CHEST
+
 			@hits = {}
 			@turn = 0
-			@bank_balance = opts[:bank_balance]
-			@free_parking_balance = opts[:free_parking_balance] || 0
-			@max_turns_in_jail = opts[max_turns_in_jail] || 3
+			@bank_balance = opts[:bank_balance] 
+			@free_parking_balance = opts[:free_parking_balance]
+			@max_turns_in_jail = opts[:max_turns_in_jail]
 			@last_roll = 0
 			@go_amount = opts[:go_amount]
-			@board = opts[:layout]
 			@initial_board = @board
 			@available_properties = @board
-			@chance_all = opts[:chance]
-			@chance = shuffle(@chance_all)
-			@community_chest_all = opts[:community_chest]
-			@community_chest = shuffle(@community_chest_all)
+			@chance = @chance_all.shuffle
+			@community_chest = @community_chest_all.shuffle
 			@num_dice = opts[:num_dice]
-			@num_houses = opts[:num_houses]
-			@num_hotels = opts[:num_hotels]
+			@num_houses = opts[:num_houses] 
+			@num_hotels = opts[:num_hotels] 
 			@die_size = opts[:die_size]
 			@starting_currency = opts[:starting_currency]
-			@players = opts[:players]
+			@variant = opts[:variant]
+
+			case opts[:players]
+				when Integer
+					@players = []
+					opts[:players].times do
+						@players << MonopolyEngine::Player.new(name: random_player_names.sample)
+					end
+				when Array
+					@players = opts[:players]
+			end
 			@completed = false
 			@board.each do |square|
 				@hits[square] = 0
@@ -34,9 +84,13 @@ module MonopolyEngine
 			end
 			self
 		end
+
+		# Returns the number of completed property sets currently owned by players
 		def all_sets_owned
 			@board.select{ |p| p.is_a? BasicProperty }.select { |p| p.set_owned? }.group_by { |p| p.set }.keys
 		end
+
+		# Produces a colourful ASCII representation of the state of the game board.
 		def summary
 			summary = Array.new(6) { '' }
 				position = 0
@@ -87,19 +141,20 @@ module MonopolyEngine
 				puts summary.collect! { |s| s << "\n" }
 				puts
 			end
-		def get_all_hits
-			@players.inject { |sum, p| sum.merge(p.history) { |k, a_value, b_value| a_value + b_value }	}
-		end
-		def shuffle(pile)
-			pile.shuffle
-		end
+
+		# Draws a chance card from the pile. If the pile is empty, resets and reshuffles the deck.
+		# @return [String] a chance string
 		def chance
 			@chance = @chance_all.shuffle if @chance.length == 0
 			@chance.shift
 		end
+
+		# Returns an array of players who have not yet been eliminated from the game.
 		def active_players
 			@players.reject{ |p| p.is_out? }
 		end
+
+		# Transfers money from the bank to a player. If the bank does not have sufficient funds, transfers as much as possible.
 		def pay_player(player, amount, reason = nil)
 			if @bank_balance > amount
 				@bank_balance = @bank_balance - amount
@@ -113,19 +168,33 @@ module MonopolyEngine
 				false
 			end
 		end	
+
+		# Pays the contents of the free parking square to a player.
 		def payout_free_parking(player)
 			player.currency = player.currency + @free_parking_balance
 			puts '[%s] Landed on free parking! £%d treasure found' % [player.name, @free_parking_balance] unless @free_parking_balance == 0
 			@free_parking_balance = 0
 		end
+
+		# Draws a community chest card from the pile. If the pile is empty, resets and reshuffles the deck.
+		# @return [String] a community chest string
 		def community_chest
 			@community_chest = @community_chest_all.shuffle if @community_chest.length == 0
 			@community_chest.shift
 		end
+
+		# Add a player to the game.
+		# @return [Array<Player>] an array of active players.
 		def register_player(player)
 			@players << player
 		end
+
+		# Play through a given number of turns of the game as configured.
 		def play(turns = 100000)
+			if @completed
+				puts 'Game is complete!'
+				return false
+			end
 			turns.to_i.times do
 				@turn = @turn + 1
 				puts '- Turn %d begins!' % @turn
@@ -210,18 +279,6 @@ module MonopolyEngine
 					break
 				end
 			end
-		end
-	end
-
-
-
-	def birthday(jody, presents, cake)
-		while jody.has_birthday?
-			jody.enjoy!
-			jody.stuff << presents
-			jody.consume cake
-
-			jody.cry if jody.wants_to_cry and jody.has_birthday # Lesley Gore reference
 		end
 	end
 end

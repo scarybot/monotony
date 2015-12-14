@@ -2,7 +2,11 @@ require 'monopoly_engine/square'
 require 'monopoly_engine/purchasable'
 
 module MonopolyEngine
+	# Represents a railway station tile.
 	class Station < PurchasableProperty
+		# @param [Hash] opts
+		# @option opts [String] :name the name of the property.
+		# @option opts [Symbol] :colour the colour to use when rendering this square on a GUI.
 		def initialize(opts)
 			super
 			@set = :stations

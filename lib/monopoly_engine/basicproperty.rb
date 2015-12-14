@@ -2,8 +2,25 @@ require 'monopoly_engine/square'
 require 'monopoly_engine/purchasable'
 
 module MonopolyEngine
+	# A property class representing the majority of properties on the board.
 	class BasicProperty < PurchasableProperty
-		attr_accessor :house_cost, :hotel_cost, :set, :num_houses, :num_hotels, :rent
+		# @return [Integer] Returns the cost of purchasing a house on this property.
+		attr_accessor :house_cost
+		# @return [Integer] Returns the cost of purchasing a hotel on this property.
+		attr_accessor :hotel_cost
+		# @return [Symbol] Returns the name of the set containing this property.
+		attr_accessor :set
+		# @return [Integer] Returns the number of houses on this property.
+		attr_accessor :num_houses
+		# @return [Integer] Returns the number of hotels on this property.
+		attr_accessor :num_hotels
+		# @return [Array<Integer>] Returns an array of six elements containing rent values for an property with no houses, one house, two houses, three houses, four houses, and a hotel.
+		attr_accessor :rent
+		# @param opts [Hash]
+		# @option opts [Array<Integer>] :rent An array of six elements containing rent values for an property with no houses, one house, two houses, three houses, four houses, and a hotel.
+		# @option opts [Integer] :house_cost The cost of purchasing a house on this property.
+		# @option opts [Integer] :hotel_cost The cost of purchasing a hotel on this property. Traditionally equal to house_cost.
+		# @option opts [Symbol] :set A symbol identifying this property as a member of a set of properties.
 		def initialize(opts)
 			super
 			@rent = opts[:rent]

@@ -2,6 +2,7 @@ require 'monopoly_engine/square'
 require 'monopoly_engine/purchasable'
 
 module MonopolyEngine
+	# Represents a utility tile, such as the Electricity Company or Water Works.
 	class Utility < PurchasableProperty
 		def initialize(opts)
 			super
