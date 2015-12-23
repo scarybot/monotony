@@ -1,13 +1,14 @@
-require 'monopoly_engine/square'
+require 'monotony/square'
 
-module MonopolyEngine
+module Monotony
 	# Represents any purchasable property tile.
 	class PurchasableProperty < Square
 		attr_accessor :value, :cost, :is_mortgaged, :owner, :mortgage_value
 		# @param opts [Hash]
-		# @option opts [Integer] :value Value of the property.
-		# @option opts [Integer] :mortgage_value Mortgaged value of the property.
-		# @option opts [Symbol] :set A symbol identifying this property as a member of a set of properties.
+		# @option opts [Integer] :value the value of the property.
+		# @option opts [Integer] :mortgage_value the mortgaged value of the property.
+		# @option opts [Symbol] :set a symbol identifying this property as a member of a set of properties.
+		# @option opts [String] :name the name of the property.
 		def initialize(opts)
 			super
 			@game = nil
@@ -72,7 +73,7 @@ module MonopolyEngine
 			@owner.behaviour[:trade_proposed].call(@owner.game, @owner, proposer, self, amount) if proposer.currency >= amount
 		end
 
-		# @returns [Boolean] whether or not this property is part of a complete set owned by a single player.
+		# @return [Boolean] whether or not this property is part of a complete set owned by a single player.
 		def set_owned?
 			if @owner
 				player_basic_properties = @owner.properties.select { |p| p.is_a? self.class }
@@ -93,7 +94,8 @@ module MonopolyEngine
 			player.properties << self
 		end
 
-		# Mortgage the property.
+		# Mortgage the property to raise cash for its owner.
+		# @return [self]
 		def mortgage
 			unless is_mortgaged?
 				puts '[%s] Mortgaged %s for £%d' % [ @owner.name, @name, @mortgage_value ]
@@ -105,6 +107,7 @@ module MonopolyEngine
 		end
 
 		# Unmortgage the property.
+		# @return [self]
 		def unmortgage
 			if is_mortgaged?
 				if @owner.currency > cost

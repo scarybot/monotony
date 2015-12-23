@@ -1,9 +1,12 @@
-require 'monopoly_engine/square'
-require 'monopoly_engine/purchasable'
+require 'monotony/square'
+require 'monotony/purchasable'
 
-module MonopolyEngine
+module Monotony
 	# Represents a utility tile, such as the Electricity Company or Water Works.
 	class Utility < PurchasableProperty
+
+		# @param opts [Hash]
+		# @option opts [String] :name A symbol identifying this property as a member of a set of properties.
 		def initialize(opts)
 			super
 			@set = :utilities

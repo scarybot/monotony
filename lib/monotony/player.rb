@@ -1,4 +1,4 @@
-module MonopolyEngine
+module Monotony
 	# Represents a player
 	class Player
 		attr_accessor :hits, :board, :name, :currency, :history, :properties, :in_game, :turns_in_jail, :behaviour, :game, :jail_free_cards
@@ -17,7 +17,7 @@ module MonopolyEngine
 			@name = args[:name]
 			@board = []
 			@properties = []
-			@behaviour = args[:behaviour] || MonopolyEngine::Behaviour::DEFAULT
+			@behaviour = args[:behaviour] || Monotony::DefaultBehaviour::DEFAULT
 			self
 		end
 
@@ -25,6 +25,8 @@ module MonopolyEngine
 		def in_jail?
 			@in_jail
 		end
+
+		# @return [Array<Player>] an array of all other players in the game.
 		def opponents
 			@game.players.reject{ |p| p == self }
 		end
@@ -114,9 +116,12 @@ module MonopolyEngine
 		end
 
 		# Called when a player is unable to pay a debt. Calls the 'money_trouble' behaviour.
+		# @param [Integer] amount amount of currency to be raised.
+		# @return [Boolean] whether or not the player was able to raise the amount required.
 		def money_trouble(amount)
 			puts '[%s] Has money trouble and is trying to raise £%d... (balance: £%d)' % [ @name, (amount - @currency), @currency ]
 			@behaviour[:money_trouble].call(game, self, amount)
+			@currency > amount
 		end
 
 		# Declares a player as out of the game.
@@ -124,17 +129,31 @@ module MonopolyEngine
 			puts '[%s] is out of the game!' % @name
 			@in_game = false
 		end
+
+		# @return [Boolean] whether or not this player has been eliminated from the game.
 		def is_out?
 			! @in_game
 		end
+
+		# Use a 'get out of jail free' card to exit jail.
+		# @return [Boolean] whether the player was both in jail and had an unused jail card available.
 		def use_jail_card!
-			if @jail_free_cards > 0
+			if @jail_free_cards > 0 and @in_jail
 				puts "[%s] Used a 'get out of jail free' card!" % @name
 				@in_jail = false
 				@turns_in_jail = 0
 				@jail_free_cards = @jail_free_cards - 1
+				true
+			else
+				false
 			end
 		end
+
+		# Transfer currency to another player, or the bank.
+		# @return [Boolean] whether or not the player was able to pay the amount requested. False indicates bancruptcy.
+		# @param [Symbol] beneficiary target Player instance or :bank.
+		# @param [Integer] amount amount of currency to transfer.
+		# @param [String] description Reference for the transaction (for game log).
 		def pay(beneficiary = :bank, amount = 0, description = nil)
 			money_trouble(amount) if @currency < amount
 			amount_to_pay = ( @currency >= amount ? amount : @currency )
@@ -156,11 +175,11 @@ module MonopolyEngine
 			if amount_to_pay < amount then			
 				puts '[%s] Unable to pay £%d to %s%s! Paid £%d instead' % [ @name, amount, paying_to, ( description ? ' for %s' % description : '' ), amount_to_pay ]
 				bankrupt!(beneficiary)
+				false
 			else
 				puts '[%s] Paid £%d to %s%s (balance: £%d)' % [ @name, amount, paying_to, ( description ? ' for %s' % description : '' ), @currency ]
 				true
 			end
-
 		end
 
 		# Roll the dice!

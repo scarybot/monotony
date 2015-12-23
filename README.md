@@ -1,15 +1,13 @@
-# MonopolyEngine
+# Monotony
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/monopoly_engine`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+This gem is an engine to simulate games of Monopoly.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'monopoly_engine'
+gem 'monotony'
 ```
 
 And then execute:
@@ -18,11 +16,50 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install monopoly_engine
+    $ gem install monotony
 
 ## Usage
 
-TODO: Write usage instructions here
+To play a quick game of Monopoly, with classic board layout and four randomly generated players"
+
+```ruby
+
+    game = Monotony::Game.new
+    game.play
+
+    # See the results of the game
+    game.summary
+
+```
+
+You can step through the game a few turns at a time, and use the ```summary``` method to view an ASCII representation of the state of the game.
+
+```ruby
+    game.play(10).summary
+```
+
+```ruby
+    monopoly_players = [
+        Player.new( name: 'James', behaviour: behaviour ),
+        Player.new( name: 'Jody',  behaviour: behaviour ),
+        Player.new( name: 'Ryan',  behaviour: behaviour ),
+        Player.new( name: 'Tine',  behaviour: behaviour )
+    ]
+
+    monopoly = Monotony::Game.new(
+        board: monopoly_board,
+        chance: chance,
+        community_chest: community_chest,
+        num_dice: 2,
+        die_size: 6,
+        starting_currency: 1500,
+        bank_balance: 12755,
+        num_hotels: 12,
+        num_houses: 48,
+        go_amount: 200,
+        max_turns_in_jail: 3,
+        players: monopoly_players
+    )```
 
 ## Development
 
@@ -32,7 +69,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/monopoly_engine.
+Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/monotony.
 
 
 ## License

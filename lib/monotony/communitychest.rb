@@ -1,7 +1,12 @@
-require 'monopoly_engine/square'
+require 'monotony/square'
 
-module MonopolyEngine
+module Monotony
+
+	# A community chest square.
 	class CommunityChest < Square
+
+		# @param [Hash] opts
+		# @option opts [String] :name the name of the square. As community chest squares are traditionally all called 'Community Chest', in the default layout we are calling these squares 'Community Chest 1', 'Community Chest 2', etc.
 		def initialize(opts)
 			@name = opts[:name]
 			@action = Proc.new do |game, owner, player, property|

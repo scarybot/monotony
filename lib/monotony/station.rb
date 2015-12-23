@@ -1,11 +1,11 @@
-require 'monopoly_engine/square'
-require 'monopoly_engine/purchasable'
+require 'monotony/square'
+require 'monotony/purchasable'
 
-module MonopolyEngine
+module Monotony
 	# Represents a railway station tile.
 	class Station < PurchasableProperty
 		# @param [Hash] opts
-		# @option opts [String] :name the name of the property.
+		# @option opts [String] :name the name of the station.
 		# @option opts [Symbol] :colour the colour to use when rendering this square on a GUI.
 		def initialize(opts)
 			super

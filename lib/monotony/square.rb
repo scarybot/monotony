@@ -1,4 +1,4 @@
-module MonopolyEngine
+module Monotony
 
 	# Represents any landable square on the board.
 	class Square

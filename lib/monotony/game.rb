@@ -1,16 +1,20 @@
-module MonopolyEngine
+module Monotony
+	# Contains the main game engine logic.
 	class Game
 		# @return [Hash] Returns a hash containing the number of times each Square has been landed on.
 		attr_accessor :hits
-		# @return [Array<Square>] Returns an array representing the current game board.
+		# @return [Array<Square>] the current game board.
 		attr_accessor :board
-		# @return [Boolean] Returns an array of players registered to the game.
+		# @return [Boolean] players registered to the game.
 		attr_accessor :players
-		attr_accessor :num_dice, :die_size, :starting_currency, :chance, :community_chest, :bank_balance, :free_parking_balance, :player_starting_balance, :go_amount, :max_turns_in_jail, :last_roll, :turn, :num_houses, :num_hotels
-		# @return [Boolean] Returns whether the game has been completed.
+		attr_accessor :num_dice, :die_size, :starting_currency, :chance, :community_chest, :bank_balance, :free_parking_balance, :player_starting_balance, :go_amount, :max_turns_in_jail, :last_roll, :num_houses, :num_hotels
+		# @return [Boolean] whether or not the game has been completed.
 		attr_accessor :completed
-		# @return [Array<Purchasable>] Returns an array of properties yet to be purchased by players.
+		# @return [Array<Purchasable>] properties yet to be purchased by players.
 		attr_accessor :available_properties
+
+		# @return [Integer] the current turn number.
+		attr_accessor :turn
 
 		# Creates a new Monopoly game
 		# @param [Hash] opts Game configuration options
@@ -37,7 +41,7 @@ module MonopolyEngine
 				num_hotels: 12,
 				starting_currency: 1500,
 				players: 4,
-				variant: MonopolyEngine::DefaultLayout
+				variant: Monotony::DefaultLayout
 			}.merge(opts)
 
 			random_player_names = %w{Andy Brian Katie Cathy Tine Jody James Ryan Lucy Pierre George Gregor Tracy Lia Andoni Ralph San}
@@ -68,7 +72,7 @@ module MonopolyEngine
 				when Integer
 					@players = []
 					opts[:players].times do
-						@players << MonopolyEngine::Player.new(name: random_player_names.sample)
+						@players << Monotony::Player.new(name: random_player_names.sample)
 					end
 				when Array
 					@players = opts[:players]
@@ -85,12 +89,16 @@ module MonopolyEngine
 			self
 		end
 
-		# Returns the number of completed property sets currently owned by players
+		# @return [Array<Symbol>] the names of completed property sets currently owned by players
 		def all_sets_owned
 			@board.select{ |p| p.is_a? BasicProperty }.select { |p| p.set_owned? }.group_by { |p| p.set }.keys
 		end
 
-		# Produces a colourful ASCII representation of the state of the game board.
+		# Produces a colourful ASCII representation of the state of the game board to standard output.
+		# The string produced contains ANSI colours.
+		# @return [String] game summary.
+		# @example Show a summary of a game in progress
+		#    game.summary
 		def summary
 			summary = Array.new(6) { '' }
 				position = 0
@@ -138,8 +146,10 @@ module MonopolyEngine
 					position = position + 1
 				end
 
-				puts summary.collect! { |s| s << "\n" }
+				summary_out = summary.collect! { |s| s << "\n" }
+				puts summary_out
 				puts
+				return summary_out
 			end
 
 		# Draws a chance card from the pile. If the pile is empty, resets and reshuffles the deck.
@@ -149,12 +159,13 @@ module MonopolyEngine
 			@chance.shift
 		end
 
-		# Returns an array of players who have not yet been eliminated from the game.
+		# @return [Array<Player>] an array of players who have not yet been eliminated from the game.
 		def active_players
 			@players.reject{ |p| p.is_out? }
 		end
 
 		# Transfers money from the bank to a player. If the bank does not have sufficient funds, transfers as much as possible.
+		# @return [Boolean] whether or not the bank had sufficient cash to pay the player the desired amount.
 		def pay_player(player, amount, reason = nil)
 			if @bank_balance > amount
 				@bank_balance = @bank_balance - amount
@@ -170,10 +181,13 @@ module MonopolyEngine
 		end	
 
 		# Pays the contents of the free parking square to a player.
+		# @return [Integer] the amount of money given to the player.
 		def payout_free_parking(player)
-			player.currency = player.currency + @free_parking_balance
+			payout = @free_parking_balance
+			player.currency = player.currency + payout
 			puts '[%s] Landed on free parking! £%d treasure found' % [player.name, @free_parking_balance] unless @free_parking_balance == 0
 			@free_parking_balance = 0
+			payout
 		end
 
 		# Draws a community chest card from the pile. If the pile is empty, resets and reshuffles the deck.
@@ -190,6 +204,13 @@ module MonopolyEngine
 		end
 
 		# Play through a given number of turns of the game as configured.
+		# @param [Integer] turns the number of turns of the game to play through.
+		# @return [self]
+		# @example Play through an entire game
+		#     game = Monotony::Game.new
+		#     game.play
+		# @example Play through 10 turns
+		#     game.play(10)
 		def play(turns = 100000)
 			if @completed
 				puts 'Game is complete!'
@@ -279,6 +300,7 @@ module MonopolyEngine
 					break
 				end
 			end
+			self
 		end
 	end
 end

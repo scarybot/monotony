@@ -1,13 +1,13 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'monopoly_engine/version'
+require 'monotony/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "monopoly_engine"
-  spec.version       = MonopolyEngine::VERSION
+  spec.name          = "monotony"
+  spec.version       = Monotony::VERSION
   spec.authors       = ["James Denness"]
-  spec.email         = ["james@denness.org"]
+  spec.email         = ["james@recordlive.net"]
 
   spec.summary       = %q{Monopoly game simulator}
   spec.description   = %q{Later}
@@ -17,7 +17,6 @@ Gem::Specification.new do |spec|
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
   # delete this section to allow pushing this gem to any host.
   if spec.respond_to?(:metadata)
-    spec.metadata['allowed_push_host'] = "TODO: Set to 'http://mygemserver.com'"
   else
     raise "RubyGems 2.0 or newer is required to protect against public gem pushes."
   end

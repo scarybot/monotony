@@ -1,7 +1,7 @@
-require 'monopoly_engine/square'
-require 'monopoly_engine/purchasable'
+require 'monotony/square'
+require 'monotony/purchasable'
 
-module MonopolyEngine
+module Monotony
 	# A property class representing the majority of properties on the board.
 	class BasicProperty < PurchasableProperty
 		# @return [Integer] Returns the cost of purchasing a house on this property.
@@ -47,13 +47,21 @@ module MonopolyEngine
 				end
 			end
 		end
+
+		# Mortgage the property to raise cash for its owner.
+		# @return [self]
 		def mortgage
 			super
 			properties_in_set(@owner.game).each do |other|
 				other.sell_hotel if @num_hotels > 0
 				other.sell_houses if @num_houses > 0
 			end
+			self
 		end
+
+		# Buy houses on the property.
+		# @param [Integer] number number of houses to add to the property.
+		# @return [self]
 		def add_houses(number)
 			housing_value = @house_cost * number
 			if @owner.game.num_houses >= number
@@ -76,6 +84,10 @@ module MonopolyEngine
 			end
 			self
 		end
+
+		# Sell houses from the property.
+		# @param [Integer] number number of houses to sell from the property.
+		# @return [self]
 		def sell_houses(number)
 			housing_value = (@house_cost / 2) * number
 			if number > @num_houses
@@ -89,19 +101,20 @@ module MonopolyEngine
 			end
 			self
 		end
+
+		# Buy a hotel on the property.
+		# @return [self]
 		def add_hotel
 			if @num_houses == 4
 				if @owner.game.num_houses > 0
 					if @owner.currency < @hotel_cost
 						puts '[%s] Unable to buy a hotel! (short of cash by £%d)' % [ @owner.name, (@hotel_cost - @owner.currency) ]
-						false
 					else
 						@owner.currency = @owner.currency - @hotel_cost
 						@num_houses, @num_hotels = 0, 1
 						@owner.game.num_houses = @owner.game.num_houses + 4
 						@owner.game.num_hotels = @owner.game.num_hotels - 1
 						puts '[%s] Purchased a hotel on %s for £%d (new balance: £%d)' % [ @owner.name, @name, @hotel_cost, @owner.currency ]
-						true
 					end			
 				else
 					puts '[%s] Not enough hotels left to purchase one for %s' % [ @owner.name, @name ]
@@ -109,6 +122,9 @@ module MonopolyEngine
 			end
 			self
 		end
+
+		# Sell hotels from the property.
+		# @return [self]
 		def sell_hotel
 			if @num_hotels < 1
 				puts "[%s] Can't sell hotel on %s, as there isn't one!" % [ @owner.name, @name ]
@@ -133,6 +149,9 @@ module MonopolyEngine
 			end
 			self
 		end
+
+		# Draw an ASCII representation of this property's housing.
+		# @return [void]
 		def display_house_ascii
 			house_array = []
 			house_string = ''

@@ -1,7 +1,12 @@
-require 'monopoly_engine/square'
+require 'monotony/square'
 
-module MonopolyEngine
+module Monotony
+
+	# A chance square.
 	class Chance < Square
+
+		# @param [Hash] opts
+		# @option opts [String] :name The name of the square. As chance squares are traditionally all called 'Chance', in the default layout we are calling these squares 'Chance 1', 'Chance 2', etc.
 		def initialize(opts)
 			@name = opts[:name]
 			@action = Proc.new do |game, owner, player, property|
