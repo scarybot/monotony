@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["james@recordlive.net"]
 
   spec.summary       = %q{Monopoly game simulator}
-  spec.description   = %q{Later}
+  spec.description   = %q{A simple engine for simulating games of Monopony.}
   spec.homepage      = "http://recordlive.audio"
   spec.license       = "MIT"
 

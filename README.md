@@ -20,7 +20,7 @@ Or install it yourself as:
 
 ## Usage
 
-To play a quick game of Monopoly, with classic board layout and four randomly generated players"
+To play a quick game of Monopoly, with classic board layout and four randomly generated players:
 
 ```ruby
 
@@ -59,7 +59,8 @@ You can step through the game a few turns at a time, and use the ```summary``` m
         go_amount: 200,
         max_turns_in_jail: 3,
         players: monopoly_players
-    )```
+    )
+```
 
 ## Development
 
