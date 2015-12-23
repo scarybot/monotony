@@ -2,6 +2,8 @@
 
 This gem is an engine to simulate games of Monopoly.
 
+[![Gem Version](https://badge.fury.io/rb/monotony.svg)](https://badge.fury.io/rb/monotony)
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -40,12 +42,14 @@ You can step through the game a few turns at a time, and use the ```summary``` m
 
 ```ruby
     monopoly_players = [
-        Player.new( name: 'James', behaviour: behaviour ),
-        Player.new( name: 'Jody',  behaviour: behaviour ),
-        Player.new( name: 'Ryan',  behaviour: behaviour ),
-        Player.new( name: 'Tine',  behaviour: behaviour )
+        Player.new( name: 'James' ),
+        Player.new( name: 'Jody' ),
+        Player.new( name: 'Ryan' ),
+        # This player is using a custom behaviour hash. See docs for more details.
+        Player.new( name: 'Tine',  behaviour: behaviour ) 
     ]
 
+    # Board layout and chance/community chest cards can be defined here; see docs for more details.
     monopoly = Monotony::Game.new(
         board: monopoly_board,
         chance: chance,

@@ -47,6 +47,7 @@ module Monotony
 					game.pay_player(player, game.go_amount, 'landing on GO')
 				}
 			),
+			
 			BasicProperty.new(
 				name: 'Old Kent Road',
 				rent: [ 2, 10, 30, 90, 160, 250 ],
