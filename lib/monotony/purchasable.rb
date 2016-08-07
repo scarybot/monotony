@@ -11,16 +11,24 @@ module Monotony
 		# @option opts [String] :name the name of the property.
 		def initialize(opts)
 			super
-			@game = nil
-			@is_mortgaged = false
-			@value = opts[:value]
-			@mortgage_value = opts[:mortgage_value]
+			opts = {
+				game: nil,
+				is_mortgaged: false,
+				value: 0,
+				mortgage_value: 0
+			}.merge(opts)
+
+			@game = opts[:game]
+			@is_mortgaged = opts[:is_mortgaged]
+			@value = opts[:value].to_int
+			@mortgage_value = opts[:mortgage_value].to_int
 		end
 
 		# Transfer a property to another player, in return for currency.
 		# @param player [Player] Receiving player
 		# @param amount [Integer] Sale value
 		def sell_to(player, amount = cost)
+			amount = amount.to_int
 			if player.currency < amount then
 				puts '[%s] Unable to buy %s! (short of cash by £%d)' % [ player.name, @name, ( amount - player.currency ) ]
 				false

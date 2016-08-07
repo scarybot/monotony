@@ -16,7 +16,7 @@ require 'monotony/variants'
 require 'monotony/behaviour'
 
 # The Monopoly Engine!
-# @author James Denness <james@recordlive.net>
+# @author James Denness <james@recordlive.uk>
 module Monotony
 
 end

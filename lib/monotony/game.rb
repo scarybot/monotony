@@ -1,18 +1,42 @@
 module Monotony
 	# Contains the main game engine logic.
 	class Game
-		# @return [Hash] Returns a hash containing the number of times each Square has been landed on.
+		# @return [Hash] a hash containing the number of times each Square has been landed on.
 		attr_accessor :hits
 		# @return [Array<Square>] the current game board.
 		attr_accessor :board
 		# @return [Boolean] players registered to the game.
 		attr_accessor :players
-		attr_accessor :num_dice, :die_size, :starting_currency, :chance, :community_chest, :bank_balance, :free_parking_balance, :player_starting_balance, :go_amount, :max_turns_in_jail, :last_roll, :num_houses, :num_hotels
+		# @return [Integer] the number of dice being used for player move rolls.
+		attr_accessor :num_dice
+		# @return [Integer] the number of faces on each dice being rolled.
+		attr_accessor :die_size
+		# @return [Integer] the amount of currency each player started the game with.
+		attr_accessor :starting_currency
+		# @return [Array<String>] the deck from which chance cards will be drawn.
+		attr_accessor :chance
+		# @return [Array<String>] the deck from which commuity chest cards will be drawn.
+		attr_accessor :community_chest
+		# @return [Integer] the current amount of currency held in the bank.
+		attr_accessor :bank_balance
+		# @return [Integer] the current amount of currency held on free parking (in some game variants).
+		attr_accessor :free_parking_balance
+		# @return [Integer] the amount of currency given to each player at the start of the game.
+		attr_accessor :player_starting_balance
+		# @return [Integer] the amount of currency given to each player as they pass GO.		
+		attr_accessor :go_amount
+		# @return [Integer] the maximum number of turns a player may spend in jail before being required to pay a fine.
+		attr_accessor :max_turns_in_jail
+		# @return [Array<Integer>] an array containing the last roll of the dice.
+		attr_accessor :last_roll
+		# @return [Integer] the number of houses available to be purchased.
+		attr_accessor :num_houses
+		# @return [Integer] the number of hotels available to be purchased.
+		attr_accessor :num_hotels
 		# @return [Boolean] whether or not the game has been completed.
 		attr_accessor :completed
-		# @return [Array<Purchasable>] properties yet to be purchased by players.
+		# @return [Array<PurchasableProperty>] properties yet to be purchased by players.
 		attr_accessor :available_properties
-
 		# @return [Integer] the current turn number.
 		attr_accessor :turn
 
@@ -28,8 +52,8 @@ module Monotony
 		# @option opts [Integer] :num_hotels The total number of hotels available to be purchased
 		# @option opts [Integer] :starting_currency The amount of currency given to each player at the start of the game.
 		# @option opts [Integer, Array<Player>] :players If an array of Player objects are given, then add them to the game. If an integer is given, generate that number of players with default options, and add those to the game instead. 
-		# @return [String] the object converted into the expected format.
-		def initialize(opts)
+		# @return [self]
+		def initialize(opts = {})
 			opts = {
 				free_parking_balance: 0,
 				bank_balance: 12755,
@@ -44,35 +68,33 @@ module Monotony
 				variant: Monotony::DefaultLayout
 			}.merge(opts)
 
-			random_player_names = %w{Andy Brian Katie Cathy Tine Jody James Ryan Lucy Pierre George Gregor Tracy Lia Andoni Ralph San}
-
 			@board = opts[:variant]::BOARD
 			@chance_all = opts[:variant]::CHANCE
 			@community_chest_all = opts[:variant]::COMMUNITY_CHEST
 
 			@hits = {}
 			@turn = 0
-			@bank_balance = opts[:bank_balance] 
-			@free_parking_balance = opts[:free_parking_balance]
-			@max_turns_in_jail = opts[:max_turns_in_jail]
+			@bank_balance = opts[:bank_balance].to_int
+			@free_parking_balance = opts[:free_parking_balance].to_int
+			@max_turns_in_jail = opts[:max_turns_in_jail].to_int
 			@last_roll = 0
-			@go_amount = opts[:go_amount]
+			@go_amount = opts[:go_amount].to_int
 			@initial_board = @board
-			@available_properties = @board
+			@available_properties = @board.select { |p| p.respond_to? :sell_to }
 			@chance = @chance_all.shuffle
 			@community_chest = @community_chest_all.shuffle
-			@num_dice = opts[:num_dice]
-			@num_houses = opts[:num_houses] 
-			@num_hotels = opts[:num_hotels] 
-			@die_size = opts[:die_size]
-			@starting_currency = opts[:starting_currency]
+			@num_dice = opts[:num_dice].to_int
+			@num_houses = opts[:num_houses].to_int
+			@num_hotels = opts[:num_hotels].to_int
+			@die_size = opts[:die_size].to_int
+			@starting_currency = opts[:starting_currency].to_int
 			@variant = opts[:variant]
 
 			case opts[:players]
 				when Integer
 					@players = []
 					opts[:players].times do
-						@players << Monotony::Player.new(name: random_player_names.sample)
+						@players << Monotony::Player.new
 					end
 				when Array
 					@players = opts[:players]
@@ -83,7 +105,7 @@ module Monotony
 			end
 			@players.each do |player|
 				player.board = @board.clone
-				player.currency = opts[:starting_currency]
+				player.currency += opts[:starting_currency]
 				player.game = self
 			end
 			self
@@ -91,12 +113,18 @@ module Monotony
 
 		# @return [Array<Symbol>] the names of completed property sets currently owned by players
 		def all_sets_owned
-			@board.select{ |p| p.is_a? BasicProperty }.select { |p| p.set_owned? }.group_by { |p| p.set }.keys
+			@board.select{ |p| p.is_a? BasicProperty }.select(&:set_owned?).group_by { |p| p.set }.keys
+		end
+
+		# @param [Player] a player object
+		# @return [Integer] the index of the given player object in the list of players.
+		def player_index(player)
+			@players.index(player)
 		end
 
 		# Produces a colourful ASCII representation of the state of the game board to standard output.
 		# The string produced contains ANSI colours.
-		# @return [String] game summary.
+		# @return [String] a textual summary of the state of the game.
 		# @example Show a summary of a game in progress
 		#    game.summary
 		def summary
@@ -161,12 +189,15 @@ module Monotony
 
 		# @return [Array<Player>] an array of players who have not yet been eliminated from the game.
 		def active_players
-			@players.reject{ |p| p.is_out? }
+			@players.reject(&:is_out?)
 		end
 
 		# Transfers money from the bank to a player. If the bank does not have sufficient funds, transfers as much as possible.
 		# @return [Boolean] whether or not the bank had sufficient cash to pay the player the desired amount.
 		def pay_player(player, amount, reason = nil)
+			amount = amount.to_int
+			reason = reason.to_s
+
 			if @bank_balance > amount
 				@bank_balance = @bank_balance - amount
 				player.currency = player.currency + amount
@@ -212,6 +243,8 @@ module Monotony
 		# @example Play through 10 turns
 		#     game.play(10)
 		def play(turns = 100000)
+			turns = turns.to_int
+
 			if @completed
 				puts 'Game is complete!'
 				return false
@@ -292,7 +325,7 @@ module Monotony
 					puts '[%s] Ended go on %s (balance: £%d)' % [ turn.name, turn.current_square.name, turn.currency ]
 				end
 
-				still_in = @players.reject{ |p| p.is_out? }
+				still_in = @players.reject(&:is_out?)
 				if active_players.count == 1
 					winner = still_in.first
 					puts '[%s] Won the game! Final balance: £%d, Property: %s' % [ winner.name, winner.currency, winner.properties.collect {|p| p.name} ]

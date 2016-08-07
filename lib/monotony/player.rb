@@ -5,19 +5,31 @@ module Monotony
 		# @return [Player] self
 		# @param [Hash] args
 		# @option opts [Hash] :behaviour Behaviour has describing this player's reaction to certain in-game situations. See Behaviour class.
-		# @option opts [String] :name The name of the player
-		def initialize(args)
+		# @option opts [String] :name The name of the player.
+		# @option opts [Integer] :currency A currency adjustment for this player (positive or negative).
+		# @option opts [Integer] :jail_free_cards The number of jail-free cards the player begins with.
+		def initialize(opts = {})
+			random_player_names = %w{Andy Brian Katie Cathy Tine Jody James Ryan Lucy Pierre Olu Gregor Tracy Lia Andoni Ralph San Omar}
+
+			opts = {
+				behaviour: Monotony::DefaultBehaviour::DEFAULT,
+				jail_free_cards: 0,
+				in_jail: false,
+				name: random_player_names.sample,
+				currency: 0,
+			}.merge(opts)
+
 			@history = []
 			@in_game = true
 			@in_jail = false
 			@turns_in_jail = 0
-			@jail_free_cards = 0
-			@currency = 0
+			@jail_free_cards = opts[:jail_free_cards].to_int
+			@currency = opts[:currency].to_int
 			@game = nil
-			@name = args[:name]
+			@name = opts[:name].to_s
 			@board = []
 			@properties = []
-			@behaviour = args[:behaviour] || Monotony::DefaultBehaviour::DEFAULT
+			@behaviour = opts[:behaviour] || Monotony::DefaultBehaviour::DEFAULT
 			self
 		end
 
@@ -49,6 +61,7 @@ module Monotony
 		# Sets whether or not this player is currently in jail.
 		# @param [Boolean] bool True for in jail, False for out of jail. 
 		def in_jail=(bool)
+			bool = bool
 			@in_jail = bool
 			@turns_in_jail = 0 if bool == false
 		end
@@ -64,6 +77,7 @@ module Monotony
 		# @param [Symbol] direction :forwards or :backwards.
 		# @return [Square] the square the player has landed on.
 		def move(n = 1, direction = :forwards)
+			direction = direction.to_sym
 			n = @board.collect(&:name).find_index(n) if n.is_a? String
 
 			case direction
@@ -96,8 +110,8 @@ module Monotony
 
 		# Declares a player as bankrupt, transferring their assets to their creditor.
 		# @param player [Player] the player to whom this player's remaining assets will be transferred. If nil, assets are given to the bank instead.
-		def bankrupt!(player = nil)
-			if player == nil
+		def bankrupt!(player = :bank)
+			if player == :bank
 				puts '[%s] Bankrupt! Giving all assets to bank' % @name
 				@properties.each do |property|
 					property.owner = nil
@@ -119,6 +133,8 @@ module Monotony
 		# @param [Integer] amount amount of currency to be raised.
 		# @return [Boolean] whether or not the player was able to raise the amount required.
 		def money_trouble(amount)
+			amount = amount.to_int
+
 			puts '[%s] Has money trouble and is trying to raise £%d... (balance: £%d)' % [ @name, (amount - @currency), @currency ]
 			@behaviour[:money_trouble].call(game, self, amount)
 			@currency > amount
@@ -155,6 +171,8 @@ module Monotony
 		# @param [Integer] amount amount of currency to transfer.
 		# @param [String] description Reference for the transaction (for game log).
 		def pay(beneficiary = :bank, amount = 0, description = nil)
+			amount = amount.to_int
+
 			money_trouble(amount) if @currency < amount
 			amount_to_pay = ( @currency >= amount ? amount : @currency )
 

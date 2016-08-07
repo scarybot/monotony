@@ -8,7 +8,7 @@ module Monotony
 		# @param [Hash] opts
 		# @option opts [String] :name The name of the square. As chance squares are traditionally all called 'Chance', in the default layout we are calling these squares 'Chance 1', 'Chance 2', etc.
 		def initialize(opts)
-			@name = opts[:name]
+			super
 			@action = Proc.new do |game, owner, player, property|
 				this_chance = game.chance
 				puts '[%s] Drew a chance: %s' % [ player.name, this_chance ]

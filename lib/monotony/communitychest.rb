@@ -8,7 +8,7 @@ module Monotony
 		# @param [Hash] opts
 		# @option opts [String] :name the name of the square. As community chest squares are traditionally all called 'Community Chest', in the default layout we are calling these squares 'Community Chest 1', 'Community Chest 2', etc.
 		def initialize(opts)
-			@name = opts[:name]
+			super
 			@action = Proc.new do |game, owner, player, property|
 				this_cc = game.community_chest
 				puts '[%s] Drew a community chest: %s' % [ player.name, this_cc ]

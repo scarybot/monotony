@@ -43,6 +43,7 @@ module Monotony
 		BOARD = [
 			Square.new(
 				name: 'GO',
+				display_class: 'bigsquare',
 				action: Proc.new { |game, owner, player, property|
 					game.pay_player(player, game.go_amount, 'landing on GO')
 				}
@@ -61,6 +62,7 @@ module Monotony
 
 			CommunityChest.new(
 				name: 'Community Chest 1',
+				display_name: 'Community Chest',
 				colour: :light_cyan
 			),
 
@@ -103,6 +105,7 @@ module Monotony
 
 			Chance.new(
 				name: 'Chance 1',
+				display_name: 'Chance',
 				colour: :light_cyan
 			),
 
@@ -130,6 +133,7 @@ module Monotony
 
 			Square.new(
 				name: 'Jail',
+				display_class: 'bigsquare',
 				colour: :light_black
 			),
 
@@ -194,6 +198,7 @@ module Monotony
 
 			CommunityChest.new(
 				name: 'Community Chest 2',
+				display_name: 'Community Chest',
 				set: :communitychest,
 				colour: :light_cyan
 			),
@@ -222,6 +227,7 @@ module Monotony
 
 			Square.new(
 				name: 'Free Parking',
+				display_class: 'bigsquare',
 				colour: :white,
 				action: Proc.new { |game, owner, player, property|
 					game.payout_free_parking(player)
@@ -241,6 +247,7 @@ module Monotony
 
 			Chance.new(
 				name: 'Chance 2',
+				display_name: 'Chance',
 				colour: :light_cyan
 			),
 
@@ -315,6 +322,7 @@ module Monotony
 
 			Square.new(
 				name: 'Go to Jail',
+				display_class: 'bigsquare',
 				colour: :light_black,
 				action: Proc.new {|game, owner, player, property|
 					player.in_jail = true
@@ -347,6 +355,7 @@ module Monotony
 
 			CommunityChest.new(
 				name: 'Community Chest 3',
+				display_name: 'Community Chest',
 				colour: :light_cyan
 			),
 
@@ -370,6 +379,7 @@ module Monotony
 
 			Chance.new(
 				name: 'Chance 3',
+				display_name: 'Chance',
 				colour: :light_cyan
 			),
 

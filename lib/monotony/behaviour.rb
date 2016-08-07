@@ -8,10 +8,10 @@ module Monotony
 					property.sell_to(player)
 				elsif game.players.collect { |p| p.properties.collect { |p| p.set } }.flatten.include? property.set
 					# Less likely to buy if another player already owns one of the set
-					property.sell_to(player) if Random.rand(0..100) >= 75
+					property.sell_to(player) if Random.rand(0..100) >= 50
 				else
 					# Will probably buy if nobody has bought any of this set yet
-					property.sell_to(player) if Random.rand(0..100) >= 25
+					property.sell_to(player) if Random.rand(0..100) >= 75
 				end
 			},
 			unmortgage_possible: Proc.new { |game, player, property|
@@ -22,18 +22,18 @@ module Monotony
 					property.unmortgage
 				end
 			},
-			houses_available: Proc.new {|game, player, property|
+			houses_available: Proc.new { |game, player, property|
 				# Buy houses when possible, but don't spend more than 40% of my money on them in any one turn
 				can_afford = ( ( player.currency * 0.4 ) / property.house_cost ).floor
 				max_available = 4 - property.num_houses
 				to_buy = [ can_afford, max_available ].min
 				property.add_houses(to_buy) if to_buy > 0 unless game.active_players == 1
 			},
-			hotel_available: Proc.new {|game, player, property|
+			hotel_available: Proc.new { |game, player, property|
 				# Buy a hotel, unless it's more than half my current balance.
 				property.add_hotel unless ( property.hotel_cost.to_f / player.currency.to_f * 100.0) > 50.0
 			},
-			money_trouble: Proc.new {|game, player, amount|
+			money_trouble: Proc.new { |game, player, amount|
 				portfolio = player.properties.sort_by { |p| p.mortgage_value }
 				while player.currency < amount do
 					if portfolio.length > 0
@@ -57,11 +57,11 @@ module Monotony
 					end
 				end
 			},
-			use_jail_card: Proc.new {|game, player|
+			use_jail_card: Proc.new { |game, player|
 				# Unless less than 50% of active sets are mine, get out of jail with a card when possible
 				player.use_jail_card! unless ( player.sets_owned.count.to_f / game.all_sets_owned.count.to_f * 100.0 ) < 50
 			},
-			trade_possible: Proc.new {|game, player|
+			trade_possible: Proc.new { |game, player|
 				puts '[%s] Considering possible trades' % player.name
 			    invested_colours = player.properties.collect(&:set).uniq
 			    player.opponents.each do |opponent|
@@ -69,7 +69,7 @@ module Monotony
 			    		factors = {}
 			    		# e.g. 66% chance of buying if one property is owned, 99% chance of buying if two are
 			    		factors[:number_owned] = ( desirable_property.number_of_set_owned.to_f + 1.0 ) / desirable_property.number_in_set(game).to_f
-			    		# More likely to trade if player has over £1000
+			    		# More likely to trade if cash rich
 						factors[:currency] = player.currency.to_f / 1000.to_f
 			    		# More likely to trade if close to GO
 			    		factors[:proximity_to_go] = 1 - ( player.distance_to_go.to_f / game.board.length.to_f )
@@ -84,7 +84,7 @@ module Monotony
 			    	end
 			    end
 			},
-			trade_proposed: Proc.new {|game, player, proposer, property, amount|
+			trade_proposed: Proc.new { |game, player, proposer, property, amount|
 				factors = {}
 				# More likely to accept a trade the longer the game has been going on for (definitely at 100 turns)
 				factors[:longevity] = ( [0, game.turn, 100].sort[1].to_f / 100.0 ).to_f

@@ -63,6 +63,7 @@ module Monotony
 		# @param [Integer] number number of houses to add to the property.
 		# @return [self]
 		def add_houses(number)
+			number = number.to_int
 			housing_value = @house_cost * number
 			if @owner.game.num_houses >= number
 				if (@num_houses + number) > 4
@@ -89,6 +90,7 @@ module Monotony
 		# @param [Integer] number number of houses to sell from the property.
 		# @return [self]
 		def sell_houses(number)
+			number = number.to_int
 			housing_value = (@house_cost / 2) * number
 			if number > @num_houses
 				puts "[%s] Can't sell %d houses on %s, as there are only %d" % [ @owner.name, number, @name, @num_houses ]
