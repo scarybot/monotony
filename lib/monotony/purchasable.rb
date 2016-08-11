@@ -107,7 +107,7 @@ module Monotony
 			unless is_mortgaged?
 				@owner.game.log '[%s] Mortgaged %s for £%d' % [ @owner.name, @name, @mortgage_value ]
 				@is_mortgaged = true
-				Transaction.new(to: @owner, from: @owner.game.bank, amount: mortgage_value, reason: 'property mortgage')
+				Transaction.new(to: @owner, from: @owner.game.bank, amount: mortgage_value, reason: 'mortgaging %s' % @name)
 				@mortgage_value
 			end
 			self
@@ -119,7 +119,7 @@ module Monotony
 			if is_mortgaged?
 				if @owner.balance > cost
 					@owner.game.log '[%s] Unmortgaged %s for £%d' % [ @owner.name, @name, cost ]
-					Transaction.new(to: @owner.game.bank, from: @owner, amount: cost, reason: 'property unmortgage')
+					Transaction.new(to: @owner.game.bank, from: @owner, amount: cost, reason: 'unmortgaging %s' % name)
 					@is_mortgaged = false
 				else
 					@owner.game.log '[%s] Unable to unmortgage %s (not enough funds)' % [ @owner.name, @name ]

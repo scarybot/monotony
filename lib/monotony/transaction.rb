@@ -40,13 +40,13 @@ module Monotony
 			@from.short_of_cash(@amount) if @from.balance < @amount
 			amount_to_pay = ( @from.balance >= @amount ? @amount : @from.balance )
 
-			@to.receive(amount)
-			@from.deduct(amount)
+			@to.receive(amount_to_pay)
+			@from.deduct(amount_to_pay)
 			paying_to = @to.owner.name
 
 			if amount_to_pay < amount then		
-				@from.owner.game.log '[%s] Unable to pay £%d to %s%s! Paid £%d instead' % [ @from.name, amount, paying_to, ( description ? ' for %s' % description : '' ), amount_to_pay ]
-				@from.owner.bankrupt!(@to) if @from.respond_to? :bankrupt!
+				@from.owner.game.log '[%s] Unable to pay £%d to %s%s! Paid £%d instead' % [ @from.owner.name, amount, paying_to, ( @reason ? ' for %s' % @reason : '' ), amount_to_pay ]
+				@from.owner.bankrupt!(@to.owner) if @from.owner.respond_to? :bankrupt!
 				false
 			else
 				@from.owner.game.log '[%s] Paid £%d to %s%s (balance: £%d)' % [ @from.owner.name, amount, paying_to, ( @reason ? ' for %s' % @reason : '' ), @from.balance ]

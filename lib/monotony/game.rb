@@ -350,7 +350,7 @@ module Monotony
 				still_in = @players.reject(&:is_out?)
 				if active_players.count == 1
 					winner = still_in.first
-					log '[%s] Won the game! Final balance: £%d, Property: %s' % [ winner.name, winner.balance, winner.properties.collect {|p| p.name} ]
+					log '[%s] Won the game after %d turns! Final balance: £%d, Property: %s' % [ winner.name, @turn, winner.balance, winner.properties.collect {|p| p.name} ]
 					@completed = true
 					break
 				end

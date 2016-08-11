@@ -33,7 +33,7 @@ module Monotony
 		def short_of_cash(amount)
 			amount = amount.to_int
 
-			@game.log '[%s] Not enough cash to pay £%d... (balance: £%d)' % [ @name, (amount - @account.balance), @account.balance ]
+			@game.log '[%s] Unable to pay debt (short by £%d)... (balance: £%d)' % [ @name, (amount - @account.balance), @account.balance ]
 			@behaviour[:out_of_cash].call(game, self, amount)
 			@account.balance > amount
 		end
