@@ -13,9 +13,9 @@ module Monotony
 			@action = Proc.new do |game, owner, player, property|
 				if owner
 					rent = game.last_roll * ( owner.properties.collect { |p| p.is_a? Utility }.count == 2 ? 10 : 4 ) 
-					player.pay(owner, rent)
+					Transaction.new(from: player, to: owner, reason: 'utility rent on %s' % property.name, amount: rent)
 				else
-					player.behaviour[:purchase_possible].call(game, player, self) if player.currency >= cost
+					player.behaviour[:purchase_possible].call(game, player, self) if player.balance >= cost
 				end
 			end
 		end

@@ -45,7 +45,7 @@ module Monotony
 				name: 'GO',
 				display_class: 'bigsquare',
 				action: Proc.new { |game, owner, player, property|
-					game.pay_player(player, game.go_amount, 'landing on GO')
+					Transaction.new(from: game.bank, to: player, reason: 'landing on go', amount: game.go_amount)
 				}
 			),
 			
@@ -81,7 +81,7 @@ module Monotony
 				name: 'Income Tax',
 				colour: :light_black,
 				action: Proc.new { |game, owner, player, property|
-					player.pay(:bank, 200, 'income tax')
+					Transaction.new(from: player, to: game.bank, reason: 'income tax', amount: 200)
 				}
 			),
 
@@ -324,10 +324,10 @@ module Monotony
 				name: 'Go to Jail',
 				display_class: 'bigsquare',
 				colour: :light_black,
-				action: Proc.new {|game, owner, player, property|
+				action: Proc.new { |game, owner, player, property|
 					player.in_jail = true
 					player.move('Jail')
-					puts '[%s] Got sent to jail!' % player.name
+					game.log '[%s] Got sent to jail!' % player.name
 				}
 			),
 
@@ -397,7 +397,7 @@ module Monotony
 			Square.new(
 				name: 'Super Tax',
 				action: Proc.new {|game, owner, player, property| 
-					player.pay(:bank, 100, 'super tax')
+					Transaction.new(from: player, to: game.bank, reason: 'super tax', amount: 100)
 				}
 			),
 

@@ -14,9 +14,9 @@ module Monotony
 				if owner
 					rent = [ 25, 50, 100, 200 ]
 					multiplier = owner.properties.select { |p| p.is_a? Station }.count
-					player.pay(owner, rent[multiplier - 1])
+					Transaction.new(from: player, to: owner, reason: 'railway station', amount: rent[multiplier - 1])
 				else
-					player.behaviour[:purchase_possible].call(game, player, self) if player.currency >= cost
+					player.behaviour[:purchase_possible].call(game, player, self) if player.balance >= cost
 				end
 			end
 		end

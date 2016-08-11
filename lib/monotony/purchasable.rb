@@ -29,18 +29,17 @@ module Monotony
 		# @param amount [Integer] Sale value
 		def sell_to(player, amount = cost)
 			amount = amount.to_int
-			if player.currency < amount then
-				puts '[%s] Unable to buy %s! (short of cash by £%d)' % [ player.name, @name, ( amount - player.currency ) ]
+			if player.balance < amount then
+				player.game.log '[%s] Unable to buy %s! (short of cash by £%d)' % [ player.name, @name, ( amount - player.balance ) ]
 				false
 			else
-				player.currency = player.currency - amount.to_i
-
 				if @owner
-					@owner.currency = @owner.currency + amount
-					puts '[%s] Sold %s%s to %s for £%d (new balance: £%d)' % [ @owner.name, @name, (is_mortgaged? ? ' (mortgaged)' : ''), player.name, amount, @owner.currency ]
+					Transaction.new(to: @owner, from: player, amount: amount.to_i, reason: 'property trade')
+					player.game.log '[%s] Sold %s%s to %s for £%d (new balance: £%d)' % [ @owner.name, @name, (is_mortgaged? ? ' (mortgaged)' : ''), player.name, amount, @owner.balance ]
 					@owner.properties.delete self
 				else
-					puts '[%s] Purchased %s%s for £%d (new balance: £%d)' % [ player.name, @name, (is_mortgaged? ? ' (mortgaged)' : ''), amount, player.currency ]
+					Transaction.new(to: player.game.bank, from: player, amount: amount.to_i, reason: 'property purchase')
+					player.game.log '[%s] Purchased %s%s for £%d (new balance: £%d)' % [ player.name, @name, (is_mortgaged? ? ' (mortgaged)' : ''), amount, player.balance ]
 				end
 
 				player.properties << self
@@ -78,7 +77,7 @@ module Monotony
 
 		# Offer to purchase this property from another player, thus calling the :trade_proposed behaviour of the receiving player.
 		def place_offer(proposer, amount)
-			@owner.behaviour[:trade_proposed].call(@owner.game, @owner, proposer, self, amount) if proposer.currency >= amount
+			@owner.behaviour[:trade_proposed].call(@owner.game, @owner, proposer, self, amount) if proposer.balance >= amount
 		end
 
 		# @return [Boolean] whether or not this property is part of a complete set owned by a single player.
@@ -96,7 +95,7 @@ module Monotony
 
 		# Gives a property to another player. Available for use as part of a trading behaviour.
 		def give_to(player)
-			puts '[%s] Gave %s to %s' % [ @owner.name, @name, player.name ]
+			player.game.log '[%s] Gave %s to %s' % [ @owner.name, @name, player.name ]
 			@owner.properties.delete self
 			@owner = player
 			player.properties << self
@@ -106,9 +105,9 @@ module Monotony
 		# @return [self]
 		def mortgage
 			unless is_mortgaged?
-				puts '[%s] Mortgaged %s for £%d' % [ @owner.name, @name, @mortgage_value ]
+				@owner.game.log '[%s] Mortgaged %s for £%d' % [ @owner.name, @name, @mortgage_value ]
 				@is_mortgaged = true
-				@owner.currency = @owner.currency + @mortgage_value
+				Transaction.new(to: @owner, from: @owner.game.bank, amount: mortgage_value, reason: 'property mortgage')
 				@mortgage_value
 			end
 			self
@@ -118,15 +117,15 @@ module Monotony
 		# @return [self]
 		def unmortgage
 			if is_mortgaged?
-				if @owner.currency > cost
-					puts '[%s] Unmortgaged %s for £%d' % [ @owner.name, @name, cost ]
-					@owner.currency = @owner.currency - cost
+				if @owner.balance > cost
+					@owner.game.log '[%s] Unmortgaged %s for £%d' % [ @owner.name, @name, cost ]
+					Transaction.new(to: @owner.game.bank, from: @owner, amount: cost, reason: 'property unmortgage')
 					@is_mortgaged = false
 				else
-					puts '[%s] Unable to unmortgage %s (not enough funds)' % [ @owner.name, @name ]
+					@owner.game.log '[%s] Unable to unmortgage %s (not enough funds)' % [ @owner.name, @name ]
 				end
 			else
-				puts '[%] Tried to unmortgage a non-mortgaged property (%s)' % [ @owner.name, @name ]
+				@owner.game.log '[%] Tried to unmortgage a non-mortgaged property (%s)' % [ @owner.name, @name ]
 			end
 			self
 		end

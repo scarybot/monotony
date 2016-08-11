@@ -27,6 +27,14 @@ module Monotony
 			@display_class = opts[:display_class] || 'square'
 			@action = opts[:action]
 			@colour = opts[:colour] || ( String.colors.include? opts[:set] ? opts[:set] : :light_black )
+			@is_simulation = false
+		end
+		def is_simulation=(simulating)
+			@is_simulation = simulating
+			self
+		end
+		def simulate
+			simulation = self.clone.is_simulation = true
 		end
 	end
 end

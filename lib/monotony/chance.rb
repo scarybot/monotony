@@ -11,13 +11,13 @@ module Monotony
 			super
 			@action = Proc.new do |game, owner, player, property|
 				this_chance = game.chance
-				puts '[%s] Drew a chance: %s' % [ player.name, this_chance ]
+				game.log '[%s] Drew a chance: %s' % [ player.name, this_chance ]
 
 				case this_chance
 				when /Go to jail/
 				when 'Go back three spaces'
 					moved_to = player.move(-3)
-					puts '[%s] Moved back to %s' % [ player.name, moved_to ]
+					game.log '[%s] Moved back to %s' % [ player.name, moved_to.name ]
 				when 'Take a trip to Marylebone Station'
 					player.move('Marylebone Station')
 				when 'Advance to Mayfair'
@@ -29,21 +29,21 @@ module Monotony
 				when 'Advance to Pall Mall'
 					player.move('Pall Mall')
 				when /Your building loan matures/
-					game.pay_player(player, 100)
+					Transaction.new(from: game.bank, to: player, reason: 'chance: building loan matures', amount: 100)
 				when /Speeding fine/
-					player.pay(:free_parking, 15, 'speeding fine')
+					Transaction.new(from: player, to: game.free_parking, reason: 'chance: speeding fine', amount: 15)
 				when /school fees/
-					player.pay(:free_parking, 150, 'school fees')
+					Transaction.new(from: player, to: game.free_parking, reason: 'chance: school fees', amount: 150)
 				when /Bank pays you/
-					game.pay_player(player, 50)
+					Transaction.new(from: game.bank, to: player, reason: 'chance: dividend', amount: 50)
 				when /Drunk in charge/
-					player.pay(:free_parking, 50, 'being drunk in charge')
+					Transaction.new(from: player, to: game.free_parking, reason: 'chance: drunk in charge', amount: 50)
 				when /crossword/
-					game.pay_player(player, 100)
+					Transaction.new(from: game.bank, to: player, reason: 'chance: crossword competition', amount: 100)
 				when /general repairs/
-					player.pay(:free_parking, (25 * player.num_houses) + (100 * player.num_hotels), 'general repairs')
+					Transaction.new(from: player, to: game.free_parking, reason: 'chance: general repairs', amount: (25 * player.num_houses) + (100 * player.num_hotels) )
 				when /street repairs/
-					player.pay(:free_parking, (40 * player.num_houses) + (115 * player.num_hotels), 'street repairs')
+					Transaction.new(from: player, to: game.free_parking, reason: 'chance: street repairs', amount: (40 * player.num_houses) + (115 * player.num_hotels) )
 				when /jail free/
 					player.jail_free_cards = player.jail_free_cards + 1
 				end

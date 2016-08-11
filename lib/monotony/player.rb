@@ -1,7 +1,8 @@
 module Monotony
 	# Represents a player
-	class Player
-		attr_accessor :hits, :board, :name, :currency, :history, :properties, :in_game, :turns_in_jail, :behaviour, :game, :jail_free_cards
+	class Player < Entity
+		attr_accessor :hits, :board, :name, :history, :properties, :in_game, :turns_in_jail, :behaviour, :game, :jail_free_cards, :in_jail
+
 		# @return [Player] self
 		# @param [Hash] args
 		# @option opts [Hash] :behaviour Behaviour has describing this player's reaction to certain in-game situations. See Behaviour class.
@@ -12,25 +13,19 @@ module Monotony
 			random_player_names = %w{Andy Brian Katie Cathy Tine Jody James Ryan Lucy Pierre Olu Gregor Tracy Lia Andoni Ralph San Omar}
 
 			opts = {
-				behaviour: Monotony::DefaultBehaviour::DEFAULT,
 				jail_free_cards: 0,
 				in_jail: false,
 				name: random_player_names.sample,
-				currency: 0,
 			}.merge(opts)
 
-			@history = []
-			@in_game = true
 			@in_jail = false
 			@turns_in_jail = 0
 			@jail_free_cards = opts[:jail_free_cards].to_int
-			@currency = opts[:currency].to_int
-			@game = nil
-			@name = opts[:name].to_s
-			@board = []
-			@properties = []
-			@behaviour = opts[:behaviour] || Monotony::DefaultBehaviour::DEFAULT
-			self
+			super
+		end
+		
+		def simulate
+			SimulatedPlayer.new(self)
 		end
 
 		# @return [Boolean] whether or not this player is currently in jail.
@@ -61,7 +56,6 @@ module Monotony
 		# Sets whether or not this player is currently in jail.
 		# @param [Boolean] bool True for in jail, False for out of jail. 
 		def in_jail=(bool)
-			bool = bool
 			@in_jail = bool
 			@turns_in_jail = 0 if bool == false
 		end
@@ -84,8 +78,8 @@ module Monotony
 			when :forwards
 				if n >= distance_to_go
 					unless in_jail?
-						puts '[%s] Passed GO' % @name
-						@game.pay_player(self, @game.go_amount, 'passing go')
+						@game.log '[%s] Passed GO' % @name
+						Transaction.new(from: game.bank, to: self, reason: 'passing go', amount: @game.go_amount)
 					end
 				end
 
@@ -110,9 +104,9 @@ module Monotony
 
 		# Declares a player as bankrupt, transferring their assets to their creditor.
 		# @param player [Player] the player to whom this player's remaining assets will be transferred. If nil, assets are given to the bank instead.
-		def bankrupt!(player = :bank)
-			if player == :bank
-				puts '[%s] Bankrupt! Giving all assets to bank' % @name
+		def bankrupt!(player = @game.bank)
+			if player == @game.bank
+				@game.log '[%s] Bankrupt! Giving all assets to bank' % @name
 				@properties.each do |property|
 					property.owner = nil
 					property.is_mortgaged = false
@@ -120,29 +114,18 @@ module Monotony
 
 				@properties = []
 			else
-				puts '[%s] Bankrupt! Giving all assets to %s' % [ @name, player.name ]
+				@game.log '[%s] Bankrupt! Giving all assets to %s' % [ @name, player.name ]
 				@properties.each { |p| p.owner = player }
-				puts '[%s] Transferred properties to %s: %s' % [ @name, player.name, @properties.collect { |p| p.name }.join(', ') ]
+				@game.log '[%s] Transferred properties to %s: %s' % [ @name, player.name, @properties.collect { |p| p.name }.join(', ') ]
 				player.properties.concat @properties unless player == nil
 				@properties = []
 			end
 			out!
 		end
 
-		# Called when a player is unable to pay a debt. Calls the 'money_trouble' behaviour.
-		# @param [Integer] amount amount of currency to be raised.
-		# @return [Boolean] whether or not the player was able to raise the amount required.
-		def money_trouble(amount)
-			amount = amount.to_int
-
-			puts '[%s] Has money trouble and is trying to raise £%d... (balance: £%d)' % [ @name, (amount - @currency), @currency ]
-			@behaviour[:money_trouble].call(game, self, amount)
-			@currency > amount
-		end
-
 		# Declares a player as out of the game.
 		def out!
-			puts '[%s] is out of the game!' % @name
+			@game.log '[%s] is out of the game!' % @name
 			@in_game = false
 		end
 
@@ -155,7 +138,7 @@ module Monotony
 		# @return [Boolean] whether the player was both in jail and had an unused jail card available.
 		def use_jail_card!
 			if @jail_free_cards > 0 and @in_jail
-				puts "[%s] Used a 'get out of jail free' card!" % @name
+				@game.log "[%s] Used a 'get out of jail free' card!" % @name
 				@in_jail = false
 				@turns_in_jail = 0
 				@jail_free_cards = @jail_free_cards - 1
@@ -170,34 +153,31 @@ module Monotony
 		# @param [Symbol] beneficiary target Player instance or :bank.
 		# @param [Integer] amount amount of currency to transfer.
 		# @param [String] description Reference for the transaction (for game log).
-		def pay(beneficiary = :bank, amount = 0, description = nil)
-			amount = amount.to_int
+		# def pay(beneficiary = @game.bank, amount = 0, description = nil)
+		# 	Transaction.new(from: self, to: beneficiary, reason: description, amount: amount_to_pay)
+		# end
 
-			money_trouble(amount) if @currency < amount
-			amount_to_pay = ( @currency >= amount ? amount : @currency )
+		def exposure(num_squares = (@game.die_size * @game.num_dice))
+			# FIXME: Add capability to simulate more than the board's size worth of squares
+			# fees = {}
+			# @game.board[0..num_squares-1].each do |this_square|
+			# 	simulated_square = this_square.clone
+			# 	simulated_game = @game.clone
+			# 	simulated_player = self.simulate
+			# 	simulated_square.action.call(simulated_game, simulated_square.owner, simulated_player, simulated_square)
+			# 	this_fee = simulated_player.transactions.inject(:+)
+			# 	fees[simulated_square.name] = this_fee.to_i unless this_fee.nil?
+			# end
+			# sorted_fees = fees.sort_by{ |k, v| v }
+			# best_fee = sorted_fees.last || [ 'null', 0 ]
+			# worst_fee = sorted_fees.first || [ 'null', 0 ]
+			# @game.log '[%s] (AI) Forecast: Worst £%d %s (%s), Best £%d %s (%s), Average £%d %s on next roll' % [ @name, worst_fee[1].abs, (worst_fee[1].to_int > 0 ? 'up' : 'down'), worst_fee[0], best_fee[1].abs, (best_fee[1].to_int > 0 ? 'up' : 'down'), best_fee[0], (fees.values.inject(:+) / fees.values.size).to_int.abs, ((fees.values.inject(:+) / fees.values.size).to_int > 0 ? 'up' : 'down') ]
+			# sorted_fees.collect { |f| - f[1] }
+			[0]
+		end
 
-			case beneficiary
-			when :bank
-				@game.bank_balance = @game.bank_balance + amount_to_pay
-				paying_to = 'bank'
-			when :free_parking
-				@game.free_parking_balance = @game.free_parking_balance + amount_to_pay
-				paying_to = 'free parking'
-			when Player
-				beneficiary.currency = beneficiary.currency + amount_to_pay
-				paying_to = beneficiary.name
-			end
+		def exposure_to(player)
 
-			@currency = @currency - amount_to_pay
-
-			if amount_to_pay < amount then			
-				puts '[%s] Unable to pay £%d to %s%s! Paid £%d instead' % [ @name, amount, paying_to, ( description ? ' for %s' % description : '' ), amount_to_pay ]
-				bankrupt!(beneficiary)
-				false
-			else
-				puts '[%s] Paid £%d to %s%s (balance: £%d)' % [ @name, amount, paying_to, ( description ? ' for %s' % description : '' ), @currency ]
-				true
-			end
 		end
 
 		# Roll the dice!
