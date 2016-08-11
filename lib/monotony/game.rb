@@ -17,8 +17,6 @@ module Monotony
 		attr_accessor :chance
 		# @return [Array<String>] the deck from which commuity chest cards will be drawn.
 		attr_accessor :community_chest
-		# @return [Integer] the amount of currency given to each player at the start of the game.
-		attr_accessor :player_starting_balance
 		# @return [Integer] the amount of currency given to each player as they pass GO.		
 		attr_accessor :go_amount
 		# @return [Integer] the maximum number of turns a player may spend in jail before being required to pay a fine.
