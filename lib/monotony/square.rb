@@ -2,7 +2,7 @@ module Monotony
 
 	# Represents any landable square on the board.
 	class Square
-		attr_accessor :action, :name, :owner, :colour, :display_name, :display_class
+		attr_accessor :action, :name, :owner, :colour, :display_name, :display_class, :is_simulation
 
 		# @return [Symbol] Returns the name of the set containing this property.
 		attr_accessor :set
@@ -34,7 +34,9 @@ module Monotony
 			self
 		end
 		def simulate
-			simulation = self.clone.is_simulation = true
+			simulation = self.clone
+			simulation.is_simulation = true
+			simulation
 		end
 	end
 end

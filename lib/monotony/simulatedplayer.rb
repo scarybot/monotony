@@ -1,11 +1,11 @@
 module Monotony
 	# Represents a simulated player for the purposes of working out possible risk next turn.
 	class SimulatedPlayer < Player
-		attr_reader :transactions
-		attr_accessor :hits, :board, :name, :currency, :history, :properties, :in_game, :turns_in_jail, :behaviour, :game, :jail_free_cards, :is_simulation, :in_jail
+		attr_reader :transactions, :is_simulation
+		attr_accessor :hits, :board, :name, :currency, :history, :properties, :in_game, :turns_in_jail, :behaviour, :game, :jail_free_cards, :in_jail, :account
 
 		# @return [SimulatedPlayer] self
-		# @param [Player] Player object representing player to simulate
+		# @param [Player] player Object representing player to simulate
 		def initialize(player)
 			@history = player.history
 			@in_game = player.in_game
@@ -18,9 +18,9 @@ module Monotony
 			@board = @game.board
 			@properties = player.properties
 			@behaviour = Monotony::DefaultBehaviour::SIMULATION
-			@account = player.account
-
-			@transactions = []
+			@account = player.account.clone
+			@account.owner = self
+			@is_simulation = true
 			self
 		end
 	end

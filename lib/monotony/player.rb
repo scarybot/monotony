@@ -1,13 +1,13 @@
 module Monotony
-	# Represents a player
+	# Represents a player, an extension of the Entity class.
 	class Player < Entity
 		attr_accessor :hits, :board, :name, :history, :properties, :in_game, :turns_in_jail, :behaviour, :game, :jail_free_cards, :in_jail
 
 		# @return [Player] self
-		# @param [Hash] args
+		# @param [Hash] opts
 		# @option opts [Hash] :behaviour Behaviour has describing this player's reaction to certain in-game situations. See Behaviour class.
 		# @option opts [String] :name The name of the player.
-		# @option opts [Integer] :currency A currency adjustment for this player (positive or negative).
+		# @option opts [Integer] :balance The opening balance of this player's account.
 		# @option opts [Integer] :jail_free_cards The number of jail-free cards the player begins with.
 		def initialize(opts = {})
 			random_player_names = %w{Andy Brian Katie Cathy Tine Jody James Ryan Lucy Pierre Olu Gregor Tracy Lia Andoni Ralph San Omar}
@@ -16,6 +16,7 @@ module Monotony
 				jail_free_cards: 0,
 				in_jail: false,
 				name: random_player_names.sample,
+				behaviour: Monotony::DefaultBehaviour::DEFAULT
 			}.merge(opts)
 
 			@in_jail = false
@@ -148,36 +149,39 @@ module Monotony
 			end
 		end
 
-		# Transfer currency to another player, or the bank.
-		# @return [Boolean] whether or not the player was able to pay the amount requested. False indicates bancruptcy.
-		# @param [Symbol] beneficiary target Player instance or :bank.
-		# @param [Integer] amount amount of currency to transfer.
-		# @param [String] description Reference for the transaction (for game log).
-		# def pay(beneficiary = @game.bank, amount = 0, description = nil)
-		# 	Transaction.new(from: self, to: beneficiary, reason: description, amount: amount_to_pay)
-		# end
-
+		# Calculate a forecast of the player's exposure on their next turn.
+		# @return [Array<Integer>] A forecast of possible exposure based on different dice rolls.
+		# @param [Integer] num_squares The number of squares ahead to forecast.
 		def exposure(num_squares = (@game.die_size * @game.num_dice))
 			# FIXME: Add capability to simulate more than the board's size worth of squares
-			# fees = {}
-			# @game.board[0..num_squares-1].each do |this_square|
-			# 	simulated_square = this_square.clone
-			# 	simulated_game = @game.clone
-			# 	simulated_player = self.simulate
-			# 	simulated_square.action.call(simulated_game, simulated_square.owner, simulated_player, simulated_square)
-			# 	this_fee = simulated_player.transactions.inject(:+)
-			# 	fees[simulated_square.name] = this_fee.to_i unless this_fee.nil?
-			# end
-			# sorted_fees = fees.sort_by{ |k, v| v }
-			# best_fee = sorted_fees.last || [ 'null', 0 ]
-			# worst_fee = sorted_fees.first || [ 'null', 0 ]
-			# @game.log '[%s] (AI) Forecast: Worst £%d %s (%s), Best £%d %s (%s), Average £%d %s on next roll' % [ @name, worst_fee[1].abs, (worst_fee[1].to_int > 0 ? 'up' : 'down'), worst_fee[0], best_fee[1].abs, (best_fee[1].to_int > 0 ? 'up' : 'down'), best_fee[0], (fees.values.inject(:+) / fees.values.size).to_int.abs, ((fees.values.inject(:+) / fees.values.size).to_int > 0 ? 'up' : 'down') ]
-			# sorted_fees.collect { |f| - f[1] }
-			[0]
+			debits = []
+			credits = []
+			@game.board[0..num_squares-1].each do |this_square|
+				simulated_square = this_square.simulate
+				simulated_game = @game.simulate
+				simulated_player = self.simulate
+				simulated_square.action.call(simulated_game, simulated_square.owner, simulated_player, simulated_square)
+				debits << Transaction.all.select { |t| t.from == simulated_player.account }.collect { |t| t.amount }.inject(:+)
+				credits << Transaction.all.select { |t| t.to == simulated_player.account }.collect { |t| t.amount }.inject(:+)
+			end
+
+			# Flip the sign for debits, remove nils, append them to credits, then sort the whole array
+			forecast = credits.reject(&:nil?).concat( debits.reject(&:nil?).collect { |d| 0 - d } ).sort
+			@game.log '[%s] (AI) Forecast: Worst £%d %s (%s), Best £%d %s (%s) on next roll' % [ @name, forecast.min.abs, (forecast.min > 0 ? 'up' : 'down'), 'unknown', forecast.max.abs, (forecast.max > 0 ? 'up' : 'down'), 'unknown' ]
+			forecast
 		end
 
 		def exposure_to(player)
 
+		end
+
+		# Called when a player is unable to meet his debts and needs to raise cash to stay in the game.
+		# @param [Integer] amount The amount of cash still to be raised
+		# @return [void]
+		def short_of_cash(amount)
+			super
+			@behaviour[:out_of_cash].call(game, self, amount)
+			@account.balance > amount
 		end
 
 		# Roll the dice!

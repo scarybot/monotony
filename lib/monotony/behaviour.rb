@@ -121,16 +121,6 @@ module Monotony
 			}
 		}
 
-		BANK = {
-			out_of_cash: Proc.new { |game, player, amount|
-			}
-		}
-
-		FREE_PARKING = {
-			out_of_cash: Proc.new { |game, player, amount|
-			}
-		}
-
 		SIMULATION = {
 			purchase_possible: Proc.new { |game, player, property| },
 			unmortgage_possible: Proc.new { |game, player, property| },

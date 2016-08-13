@@ -33,7 +33,8 @@ module Monotony
 		attr_accessor :available_properties
 		# @return [Integer] the current turn number.
 		attr_accessor :turn
-
+		# @return [Boolean] whether or not this Game object is a simulation inside another Game.
+		attr_accessor :is_simulation
 		# @return [Account] the Account holding the money owned by the bank.
 		attr_reader :bank
 		# @return [Account] the Account holding the currency held on free parking (in some game variants).
@@ -93,14 +94,12 @@ module Monotony
 			@bank = Entity.new(
 				name: :bank,
 				balance: opts[:bank_balance],
-				behaviour: Monotony::DefaultBehaviour::BANK,
 				game: self
 			)
 
 			@free_parking = Entity.new(
 				name: :free_parking,
 				balance: opts[:free_parking_balance],
-				behaviour: Monotony::DefaultBehaviour::FREE_PARKING,
 				game: self
 			)
 
@@ -130,18 +129,27 @@ module Monotony
 			@board.select{ |p| p.is_a? BasicProperty }.select(&:set_owned?).group_by { |p| p.set }.keys
 		end
 
-		# @param [Player] a player object
+		# @param [Player] player A player object.
 		# @return [Integer] the index of the given player object in the list of players.
 		def player_index(player)
 			@players.index(player)
 		end
 
+		# @return [void]
 		def log(message)
 			@logger.info(message)
 		end
 
+		# @return [void]
 		def debug_log(message)
 			@logger.debug(message)
+		end
+
+		# @return [Game] a clone of the current game object for forecasting purposes.
+		def simulate
+			simulation = self.clone
+			simulation.is_simulation = true
+			simulation
 		end
 
 		# Produces a colourful ASCII representation of the state of the game board to standard output.
@@ -213,23 +221,6 @@ module Monotony
 		def active_players
 			@players.reject(&:is_out?)
 		end
-
-		# Transfers money from the bank to a player. If the bank does not have sufficient funds, transfers as much as possible.
-		# @return [Boolean] whether or not the bank had sufficient cash to pay the player the desired amount.
-		def pay_player(player, amount, reason = nil)
-			amount = amount.to_int
-			reason = reason.to_s
-
-			if @bank.balance > amount
-				log '[%s] Received £%d from bank%s (balance: £%d, bank balance: £%d)' % [ player.name, amount, (reason ? ' for %s' % reason : '' ), player.balance, @bank.balance ]
-				Transaction.new(to: player, from: @bank, amount: amount, reason: reason)
-				true
-			else
-				log '[%s] Unable to receive £%d from bank! Received £%d instead (balance: £%d)' % [ player.name, amount, bank.balance, player.balance ]
-				Transaction.new(to: player, from: @bank, amount: @bank.balance, reason: reason)
-				false
-			end
-		end	
 
 		# Pays the contents of the free parking square to a player.
 		# @return [Integer] the amount of money given to the player.

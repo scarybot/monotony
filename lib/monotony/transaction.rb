@@ -1,4 +1,5 @@
 module Monotony
+	# Holds details of a transfer of funds from one entity to another.
 	class Transaction
 		attr_accessor :from, :to, :amount, :reason, :is_simulation
 		attr_reader :reversed, :completed
@@ -25,7 +26,7 @@ module Monotony
 			@amount = opts[:amount]
 			@reason = opts[:reason]
 			@reversed = false
-			@is_simulation = opts[:to].respond_to?(:is_simulation) | opts[:from].respond_to?(:is_simuation)
+			@is_simulation = opts[:to].owner.respond_to?(:is_simulation) | opts[:from].owner.respond_to?(:is_simuation)
 
 			@@all << self
 			complete unless @is_simulation
@@ -36,6 +37,8 @@ module Monotony
 			@@all
 		end
 
+		# Complete the transaction if possible, otherwise proceed with liquidating assets if required.
+		# @return [Boolean] whether or not the transaction was completed in full.
 		def complete
 			@from.short_of_cash(@amount) if @from.balance < @amount
 			amount_to_pay = ( @from.balance >= @amount ? @amount : @from.balance )
@@ -56,7 +59,8 @@ module Monotony
 			@completed = true
 		end
 
-		# Not sure if this will actually be useful
+		# Reverse the transaction.
+		# @return [void]
 		def reverse
 			@to.deduct(amount)
 			@from.receive(amount)
