@@ -1,7 +1,7 @@
 module Monotony
 	# Represents a player, an extension of the Entity class.
 	class Player < Entity
-		attr_accessor :hits, :board, :name, :history, :properties, :in_game, :turns_in_jail, :behaviour, :game, :jail_free_cards, :in_jail
+		attr_accessor :hits, :board, :name, :history, :properties, :in_game, :turns_in_jail, :behaviour, :game, :jail_free_cards, :in_jail, :personality
 
 		# @return [Player] self
 		# @param [Hash] opts
@@ -16,7 +16,8 @@ module Monotony
 				jail_free_cards: 0,
 				in_jail: false,
 				name: random_player_names.sample,
-				behaviour: Monotony::DefaultBehaviour::DEFAULT
+				behaviour: Monotony::DefaultBehaviour::DEFAULT,
+				personality: Personality.new
 			}.merge(opts)
 
 			@in_jail = false
@@ -132,7 +133,7 @@ module Monotony
 
 		# @return [Boolean] whether or not this player has been eliminated from the game.
 		def is_out?
-			! @in_game
+			not @in_game
 		end
 
 		# Use a 'get out of jail free' card to exit jail.
@@ -180,7 +181,7 @@ module Monotony
 		# @return [void]
 		def short_of_cash(amount)
 			super
-			@behaviour[:out_of_cash].call(game, self, amount)
+			act(:out_of_cash, amount: amount)
 			@account.balance > amount
 		end
 

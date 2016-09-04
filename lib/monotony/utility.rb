@@ -10,14 +10,15 @@ module Monotony
 		def initialize(opts)
 			super
 			@set = :utilities
-			@action = Proc.new do |game, owner, player, property|
-				if owner
-					rent = game.last_roll * ( owner.properties.collect { |p| p.is_a? Utility }.count == 2 ? 10 : 4 ) 
-					Transaction.new(from: player, to: owner, reason: 'utility rent on %s' % property.name, amount: rent)
-				else
-					player.behaviour[:purchase_possible].call(game, player, self) if player.balance >= cost
-				end
+		end
+
+		def action(**args)
+			if @owner
+				rent = @owner.game.last_roll * ( @owner.properties.collect { |p| p.is_a? Utility }.count == 2 ? 10 : 4 ) 
+				Transaction.new(from: args[:player], to: @owner, reason: 'utility rent on %s' % @name, amount: rent)
 			end
+
+			super
 		end
 	end
 end

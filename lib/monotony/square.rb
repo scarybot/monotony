@@ -38,5 +38,8 @@ module Monotony
 			simulation.is_simulation = true
 			simulation
 		end
+		def action(**args)
+			@action.call(args)
+		end
 	end
 end

@@ -29,23 +29,43 @@ module Monotony
 			@set = opts[:set]
 			@num_houses = 0
 			@num_hotels = 0
-			@action = Proc.new do |game, owner, player, property|
-				if owner
-					if set_owned?
-						rent_to_pay = (property.num_hotels  == 1 ? property.rent[5] : ( property.num_houses == 0 ? (@rent[0] * 2) :  property.rent[property.num_houses] ) )
-					else
-						rent_to_pay = property.rent[0]
-					end
-					if owner != player
-						if not owner.is_out? and not is_mortgaged?
-							game.log '[%s] Due to pay £%d rent to %s for landing on %s with %s' % [ player.name, rent_to_pay, owner.name, property.name, ( property.num_hotels == 1 ? 'a hotel' : '%d houses' % property.num_houses) ]
-							Transaction.new(from: player, to: owner, reason: 'rent on %s' % property.name, amount: rent_to_pay)
-						end
-					end
+		end
+
+		def action(**args)
+			if @owner
+				if set_owned?
+					rent_to_pay = (@num_hotels  == 1 ? @rent[5] : ( @num_houses == 0 ? (@rent[0] * 2) :  @rent[@num_houses] ) )
 				else
-					player.behaviour[:purchase_possible].call(game, player, self) if player.balance >= cost
+					rent_to_pay = @rent[0]
+				end
+				if @owner != args[:player]
+					if not @owner.is_out? and not is_mortgaged?
+						game.log '[%s] Due to pay £%d rent to %s for landing on %s with %s' % [ args[:player].name, rent_to_pay, @owner.name, @name, ( @num_hotels == 1 ? 'a hotel' : '%d houses' % @num_houses) ]
+						Transaction.new(from: args[:player], to: @owner, reason: 'rent on %s' % @name, amount: rent_to_pay)
+					end
+				end
+			else
+				sell_to(args[:player]) if args[:player].decide(:purchase_possible, property: self).is_yes?
+			end
+
+			super
+		end
+
+		# Called at the start of every turn
+		def maintenance_actions
+			if set_owned?
+				case @num_houses
+				when 0..3
+					unless @num_hotels > 0
+						decision = @owner.decide(:houses_available, property: self)
+						add_houses( decision.outputs[:to_buy] ) if to_buy > 0 and decision.is_yes?
+					end
+				when 4
+					decision = @owner.decide(:hotel_available, property: self)
+					add_hotel if decision.is_yes?
 				end
 			end
+			super
 		end
 
 		# Mortgage the property to raise cash for its owner.

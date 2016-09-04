@@ -24,6 +24,20 @@ module Monotony
 			@mortgage_value = opts[:mortgage_value].to_int
 		end
 
+		# Action to take on landing on properties of this type
+		def action(**args)
+			args[:player].decide(:purchase_possible, property: self) if args[:player].balance >= cost unless @owner
+			super
+		end
+
+		# Called at the start of every turn
+		def maintenance_actions
+			if @is_mortgaged?
+				unmortgage if @owner.decide(:unmortgage_possible, property: self).is_yes? and @owner.balance > @cost
+			end
+			super
+		end
+
 		# Transfer a property to another player, in return for currency.
 		# @param player [Player] Receiving player
 		# @param amount [Integer] Sale value
@@ -77,7 +91,9 @@ module Monotony
 
 		# Offer to purchase this property from another player, thus calling the :trade_proposed behaviour of the receiving player.
 		def place_offer(proposer, amount)
-			@owner.behaviour[:trade_proposed].call(@owner.game, @owner, proposer, self, amount) if proposer.balance >= amount
+			if proposer.balance >= amount
+				property.sell_to(proposer, amount) if @owner.decide(:trade_proposed, game: @owner.game, player: @owner, proposer: proposer, property: self, amount: amount).is_yes?
+			end
 		end
 
 		# @return [Boolean] whether or not this property is part of a complete set owned by a single player.

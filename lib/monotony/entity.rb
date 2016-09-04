@@ -42,5 +42,19 @@ module Monotony
 			amount = amount.to_int
 			@game.log '[%s] Unable to pay debt (short by £%d)... (balance: £%d)' % [ @name, (amount - @account.balance), @account.balance ]
 		end
+
+		def decide(behaviour_type, **elements)
+			elements[:game] = @game
+			elements[:player] = self
+			decision = Decision.new(elements)
+			@behaviour[behaviour_type].call(decision)
+			decision
+		end
+
+		def act(behaviour_type, **elements)
+			elements[:game] = @game
+			elements[:player] = self
+			@behaviour[behaviour_type].call(elements)
+		end
 	end
 end

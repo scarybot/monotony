@@ -110,6 +110,12 @@ module Monotony
 						@players << Monotony::Player.new
 					end
 				when Array
+					@players.each do |p|
+						unless p.kind_of? Player
+							raise TypeError.new(':players must be either an integer or an array of Players')
+						end
+					end
+
 					@players = opts[:players]
 			end
 			@completed = false
@@ -271,33 +277,14 @@ module Monotony
 					log '[%s] Begins on %s (balance: £%d)' % [ turn.name , turn.current_square.name, turn.balance ]
 
 					turn.properties.each do |property|
-						case property
-						when Station
-							if property.is_mortgaged?
-								turn.behaviour[:unmortgage_possible].call(self, turn, property) if turn.balance > property.cost
-							end
-						when Utility
-							if property.is_mortgaged?
-								turn.behaviour[:unmortgage_possible].call(self, turn, property) if turn.balance > property.cost
-							end
-						when BasicProperty
-							if property.is_mortgaged?
-								turn.behaviour[:unmortgage_possible].call(self, turn, property) if turn.balance > property.cost
-							else
-								if property.set_owned?
-									case property.num_houses
-									when 0..3
-										turn.behaviour[:houses_available].call(self, turn, property) unless property.num_hotels > 0
-									when 4
-										turn.behaviour[:hotel_available].call(self, turn, property)
-									end
-								end
-							end
-						end
+						property.maintenance_actions
 					end
 
-					turn.behaviour[:trade_possible].call(self, turn) if not turn.properties.empty?
-					turn.behaviour[:use_jail_card].call(self, turn) if turn.in_jail? and turn.jail_free_cards > 0
+					turn.act(:trade_possible) if not turn.properties.empty?
+
+					if turn.in_jail? and turn.jail_free_cards > 0
+						player.use_jail_card! if turn.decide(:use_jail_card).is_yes?
+					end
 
 					result = turn.roll
 					double = (result.uniq.length == 1)
