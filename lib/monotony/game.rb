@@ -115,13 +115,17 @@ module Monotony
 							raise TypeError.new(':players must be either an integer or an array of Players')
 						end
 					end
-
 					@players = opts[:players]
+				else
+					raise TypeError.new(':players must be either an integer or an array of Players')
 			end
+
 			@completed = false
+
 			@board.each do |square|
 				@hits[square] = 0
 			end
+
 			@players.each do |player|
 				player.account.balance = @starting_currency
 				player.board = @board.clone
@@ -269,58 +273,58 @@ module Monotony
 			turns.times do
 				@turn = @turn + 1
 				log '- Turn %d begins!' % @turn
-				@players.each do |turn|
-					if turn.is_out?
-						log '[%s] Is sitting out' % turn.name
+				@players.each do |current_player|
+					if current_player.is_out?
+						log '[%s] Is sitting out' % current_player.name
 						next
 					end
-					log '[%s] Begins on %s (balance: £%d)' % [ turn.name , turn.current_square.name, turn.balance ]
+					log '[%s] Begins on %s (balance: £%d)' % [ current_player.name , current_player.current_square.name, current_player.balance ]
 
-					turn.properties.each do |property|
+					current_player.properties.each do |property|
 						property.maintenance_actions
 					end
 
-					turn.act(:trade_possible) if not turn.properties.empty?
+					current_player.act(:trade_possible) unless current_player.properties.empty?
 
-					if turn.in_jail? and turn.jail_free_cards > 0
-						player.use_jail_card! if turn.decide(:use_jail_card).is_yes?
+					if current_player.in_jail? and current_player.jail_free_cards > 0
+						player.use_jail_card! if current_player.decide(:use_jail_card).is_yes?
 					end
 
-					result = turn.roll
+					result = current_player.roll
 					double = (result.uniq.length == 1)
 
 					move_total = result.inject(:+)
 					@last_roll = move_total
 
 
-					log '[%s] Rolled %s (total: %d)' % [ turn.name, result.join(', '), move_total ]
-					log '[%s] Rolled a double' % turn.name if double
+					log '[%s] Rolled %s (total: %d)' % [ current_player.name, result.join(', '), move_total ]
+					log '[%s] Rolled a double' % current_player.name if double
 
-					if turn.in_jail?
+					if current_player.in_jail?
 						if double
-							log '[%s] Got out of jail! (rolled double)' % turn.name
-							turn.in_jail = false
+							log '[%s] Got out of jail! (rolled double)' % current_player.name
+							current_player.in_jail = false
 						else
-							turn.turns_in_jail = turn.turns_in_jail + 1
-							log '[%s] Is still in jail (turn %d)' % [ turn.name, turn.turns_in_jail ]
-							if turn.turns_in_jail >= @max_turns_in_jail
-								turn.in_jail = false
-								Transaction.new(to: @free_parking, from: turn, amount: 50, reason: 'get out of jail')
-								log '[%s] Got out of jail (paid out)' % turn.name
+							current_player.turns_in_jail = current_player.turns_in_jail + 1
+							log '[%s] Is still in jail (turn %d)' % [ current_player.name, current_player.turns_in_jail ]
+							if current_player.turns_in_jail >= @max_turns_in_jail
+								current_player.in_jail = false
+								Transaction.new(to: @free_parking, from: current_player, amount: 50, reason: 'get out of jail')
+								log '[%s] Got out of jail (paid out)' % current_player.name
 							else 
 								next
 							end
 						end
 					end
 
-					square = turn.move(move_total)
+					square = current_player.move(move_total)
 
-					log '[%s] Moved to %s' % [ turn.name, square.name ]
-					square.action.call(self, square.owner, turn, square)
+					log '[%s] Moved to %s' % [ current_player.name, square.name ]
+					square.action(self, square.owner, current_player, square)
 
-					log '[%s] Next throw' % turn.name if double
+					log '[%s] Next throw' % current_player.name if double
 					redo if double
-					log '[%s] Ended on %s (balance: £%d)' % [ turn.name, turn.current_square.name, turn.balance ]
+					log '[%s] Ended on %s (balance: £%d)' % [ current_player.name, current_player.current_square.name, current_player.balance ]
 				end
 
 				still_in = @players.reject(&:is_out?)

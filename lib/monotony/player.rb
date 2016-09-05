@@ -59,7 +59,7 @@ module Monotony
 		# @param [Boolean] bool True for in jail, False for out of jail. 
 		def in_jail=(bool)
 			@in_jail = bool
-			@turns_in_jail = 0 if bool == false
+			@turns_in_jail = 0 unless bool
 		end
 
 		# @return [Integer] the number of squares between this player's current position on the board, and the GO square.
@@ -161,7 +161,7 @@ module Monotony
 				simulated_square = this_square.simulate
 				simulated_game = @game.simulate
 				simulated_player = self.simulate
-				simulated_square.action.call(simulated_game, simulated_square.owner, simulated_player, simulated_square)
+				simulated_square.action(simulated_game, simulated_square.owner, simulated_player, simulated_square)
 				debits << Transaction.all.select { |t| t.from == simulated_player.account }.collect { |t| t.amount }.inject(:+)
 				credits << Transaction.all.select { |t| t.to == simulated_player.account }.collect { |t| t.amount }.inject(:+)
 			end

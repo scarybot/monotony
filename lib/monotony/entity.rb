@@ -47,14 +47,14 @@ module Monotony
 			elements[:game] = @game
 			elements[:player] = self
 			decision = Decision.new(elements)
-			@behaviour[behaviour_type].call(decision)
+			@behaviour.send(behaviour_type, decision)
 			decision
 		end
 
 		def act(behaviour_type, **elements)
 			elements[:game] = @game
 			elements[:player] = self
-			@behaviour[behaviour_type].call(elements)
+			@behaviour.send(behaviour_type.to_sym, elements)
 		end
 	end
 end

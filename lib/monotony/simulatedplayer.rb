@@ -17,7 +17,7 @@ module Monotony
 			@name = 'sim'
 			@board = @game.board
 			@properties = player.properties
-			@behaviour = Monotony::DefaultBehaviour::SIMULATION
+			@behaviour = Monotony::EmptyBehaviour
 			@account = player.account.clone
 			@account.owner = self
 			@is_simulation = true

@@ -47,7 +47,7 @@ module Monotony
 			@from.deduct(amount_to_pay)
 			paying_to = @to.owner.name
 
-			if amount_to_pay < amount then		
+			if amount_to_pay < amount
 				@from.owner.game.log '[%s] Unable to pay £%d to %s%s! Paid £%d instead' % [ @from.owner.name, amount, paying_to, ( @reason ? ' for %s' % @reason : '' ), amount_to_pay ]
 				@from.owner.bankrupt!(@to.owner) if @from.owner.respond_to? :bankrupt!
 				false

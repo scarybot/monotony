@@ -33,11 +33,11 @@ module Monotony
 		end
 
 		def is_yes?
-			outcome == true
+			outcome
 		end
 
 		def is_no?
-			outcome == false
+			!outcome
 		end
 
 		def [](element)

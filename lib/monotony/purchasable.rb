@@ -43,7 +43,7 @@ module Monotony
 		# @param amount [Integer] Sale value
 		def sell_to(player, amount = cost)
 			amount = amount.to_int
-			if player.balance < amount then
+			if player.balance < amount
 				player.game.log '[%s] Unable to buy %s! (short of cash by £%d)' % [ player.name, @name, ( amount - player.balance ) ]
 				false
 			else
