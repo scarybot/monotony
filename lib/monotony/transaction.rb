@@ -26,7 +26,7 @@ module Monotony
 			@amount = opts[:amount]
 			@reason = opts[:reason]
 			@reversed = false
-			@is_simulation = opts[:to].owner.respond_to?(:is_simulation) | opts[:from].owner.respond_to?(:is_simuation)
+			@is_simulation = @to.owner.respond_to?(:is_simulation) | @from.owner.respond_to?(:is_simuation)
 
 			@@all << self
 			complete unless @is_simulation

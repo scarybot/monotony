@@ -2,7 +2,8 @@ module Monotony
 
 	# Represents any landable square on the board.
 	class Square
-		attr_accessor :action, :name, :owner, :colour, :display_name, :display_class, :is_simulation
+		include DeepDive
+		attr_accessor :action, :name, :owner, :colour, :display_name, :display_class, :is_simulation, :game
 
 		# @return [Symbol] Returns the name of the set containing this property.
 		attr_accessor :set
@@ -28,18 +29,29 @@ module Monotony
 			@action = opts[:action]
 			@colour = opts[:colour] || ( String.colors.include? opts[:set] ? opts[:set] : :light_black )
 			@is_simulation = false
+			@game = nil
 		end
 		def is_simulation=(simulating)
 			@is_simulation = simulating
 			self
 		end
+
 		def simulate
 			simulation = self.clone
 			simulation.is_simulation = true
 			simulation
 		end
+
 		def action(**args)
-			@action.call(args)
+			@action.call(@game, @owner, args[:player], self)
 		end
+
+		def maintenance_actions
+		end
+
+		def clone
+			self.dclone
+		end
+
 	end
 end

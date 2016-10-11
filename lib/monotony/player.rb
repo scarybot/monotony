@@ -16,13 +16,14 @@ module Monotony
 				jail_free_cards: 0,
 				in_jail: false,
 				name: random_player_names.sample,
-				behaviour: Monotony::DefaultBehaviour::DEFAULT,
-				personality: Personality.new
+				behaviour: Monotony::DefaultBehaviour.new,
+				personality: Personality.new({})
 			}.merge(opts)
 
 			@in_jail = false
 			@turns_in_jail = 0
 			@jail_free_cards = opts[:jail_free_cards].to_int
+			@personality = opts[:personality]
 			super
 		end
 		
@@ -158,10 +159,12 @@ module Monotony
 			debits = []
 			credits = []
 			@game.board[0..num_squares-1].each do |this_square|
-				simulated_square = this_square.simulate
-				simulated_game = @game.simulate
-				simulated_player = self.simulate
-				simulated_square.action(simulated_game, simulated_square.owner, simulated_player, simulated_square)
+        simulated_player = self.simulate
+        simulated_game = simulated_player.game
+
+        simulated_square = this_square.simulate
+				simulated_square.action(game: simulated_game, player: simulated_player)
+
 				debits << Transaction.all.select { |t| t.from == simulated_player.account }.collect { |t| t.amount }.inject(:+)
 				credits << Transaction.all.select { |t| t.to == simulated_player.account }.collect { |t| t.amount }.inject(:+)
 			end
@@ -181,7 +184,7 @@ module Monotony
 		# @return [void]
 		def short_of_cash(amount)
 			super
-			act(:out_of_cash, amount: amount)
+			act(:liquidate, amount: amount)
 			@account.balance > amount
 		end
 

@@ -19,6 +19,7 @@ module Monotony
 			if @outcome
 				@outcome
 			else
+				pp @factors
 				@probability = @factors.inject(:*)
 				@outcome = Random.rand(1..100) < (@factors.inject(:*) * 100)
 			end

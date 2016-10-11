@@ -15,13 +15,20 @@ module Monotony
 			@currency = player.balance
 			@game = player.game.clone
 			@name = 'sim'
-			@board = @game.board
+			@board = @game.board.clone
 			@properties = player.properties
-			@behaviour = Monotony::EmptyBehaviour
+			@behaviour = Monotony::EmptyBehaviour.new
 			@account = player.account.clone
 			@account.owner = self
 			@is_simulation = true
 			self
-		end
+    end
+
+    def add_property(property)
+    end
+
+    def remove_property(property)
+    end
+
 	end
 end

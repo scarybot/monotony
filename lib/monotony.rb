@@ -1,8 +1,9 @@
 #!/usr/bin/ruby
 
 require 'pp'
-require 'colorize'
 require 'logger'
+require 'colorize'
+require 'deep_dive'
 
 require 'monotony/basicproperty'
 require 'monotony/chance'

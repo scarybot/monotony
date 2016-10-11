@@ -1,6 +1,8 @@
 module Monotony
 	# Contains the main game engine logic.
 	class Game
+    include DeepDive
+
 		# @return [Hash] a hash containing the number of times each Square has been landed on.
 		attr_accessor :hits
 		# @return [Array<Square>] the current game board.
@@ -124,6 +126,7 @@ module Monotony
 
 			@board.each do |square|
 				@hits[square] = 0
+				square.game = self
 			end
 
 			@players.each do |player|
@@ -134,7 +137,7 @@ module Monotony
 			self
 		end
 
-		# @return [Array<Symbol>] the names of completed property sets currently owned by players
+    # @return [Array<Symbol>] the names of completed property sets currently owned by players
 		def all_sets_owned
 			@board.select{ |p| p.is_a? BasicProperty }.select(&:set_owned?).group_by { |p| p.set }.keys
 		end
@@ -157,7 +160,7 @@ module Monotony
 
 		# @return [Game] a clone of the current game object for forecasting purposes.
 		def simulate
-			simulation = self.clone
+			simulation = self.dclone
 			simulation.is_simulation = true
 			simulation
 		end
@@ -284,10 +287,10 @@ module Monotony
 						property.maintenance_actions
 					end
 
-					current_player.act(:trade_possible) unless current_player.properties.empty?
+					current_player.act(:consider_proposing_trade) unless current_player.properties.empty?
 
 					if current_player.in_jail? and current_player.jail_free_cards > 0
-						player.use_jail_card! if current_player.decide(:use_jail_card).is_yes?
+						current_player.use_jail_card! if current_player.decide(:consider_using_jail_card).is_yes?
 					end
 
 					result = current_player.roll
@@ -320,7 +323,7 @@ module Monotony
 					square = current_player.move(move_total)
 
 					log '[%s] Moved to %s' % [ current_player.name, square.name ]
-					square.action(self, square.owner, current_player, square)
+					square.action(game: self, player: current_player)
 
 					log '[%s] Next throw' % current_player.name if double
 					redo if double

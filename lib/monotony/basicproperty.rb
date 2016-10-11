@@ -45,7 +45,7 @@ module Monotony
 					end
 				end
 			else
-				sell_to(args[:player]) if args[:player].decide(:purchase_possible, property: self).is_yes?
+				sell_to(args[:player]) if args[:player].decide(:consider_purchase, property: self).is_yes?
 			end
 
 			super
@@ -57,11 +57,11 @@ module Monotony
 				case @num_houses
 				when 0..3
 					unless @num_hotels > 0
-						decision = @owner.decide(:houses_available, property: self)
-						add_houses( decision.outputs[:to_buy] ) if to_buy > 0 and decision.is_yes?
+						decision = @owner.decide(:consider_house_purchase, property: self)
+						add_houses( decision.outputs[:number_to_buy] ) if decision.is_yes? and decision.outputs[:number_to_buy] > 0
 					end
 				when 4
-					decision = @owner.decide(:hotel_available, property: self)
+					decision = @owner.decide(:consider_hotel_purchase, property: self)
 					add_hotel if decision.is_yes?
 				end
 			end

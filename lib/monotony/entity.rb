@@ -51,10 +51,23 @@ module Monotony
 			decision
 		end
 
+		def remove_property(property)
+			@properties.delete(property)
+		end
+
+		def add_property(property)
+			@properties << property unless @properties.include?(property)
+		end
+
 		def act(behaviour_type, **elements)
 			elements[:game] = @game
 			elements[:player] = self
 			@behaviour.send(behaviour_type.to_sym, elements)
+		end
+
+		# Easiest way to get a quick and dirty deep copy
+		def clone
+			Marshal.load(Marshal.dump(self))
 		end
 	end
 end

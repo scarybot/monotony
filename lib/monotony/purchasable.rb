@@ -26,14 +26,16 @@ module Monotony
 
 		# Action to take on landing on properties of this type
 		def action(**args)
-			args[:player].decide(:purchase_possible, property: self) if args[:player].balance >= cost unless @owner
+			args[:player].decide(:consider_purchase, property: self) if args[:player].balance >= cost unless @owner
 			super
 		end
 
 		# Called at the start of every turn
 		def maintenance_actions
-			if @is_mortgaged?
-				unmortgage if @owner.decide(:unmortgage_possible, property: self).is_yes? and @owner.balance > @cost
+			if is_mortgaged?
+						if @owner.decide(:consider_unmortgage, property: self).is_yes? and @owner.balance > cost
+							unmortgage!
+						end
 			end
 			super
 		end
@@ -50,13 +52,13 @@ module Monotony
 				if @owner
 					Transaction.new(to: @owner, from: player, amount: amount.to_i, reason: 'property trade')
 					player.game.log '[%s] Sold %s%s to %s for £%d (new balance: £%d)' % [ @owner.name, @name, (is_mortgaged? ? ' (mortgaged)' : ''), player.name, amount, @owner.balance ]
-					@owner.properties.delete self
+					@owner.remove_property(self)
 				else
 					Transaction.new(to: player.game.bank, from: player, amount: amount.to_i, reason: 'property purchase')
 					player.game.log '[%s] Purchased %s%s for £%d (new balance: £%d)' % [ player.name, @name, (is_mortgaged? ? ' (mortgaged)' : ''), amount, player.balance ]
 				end
 
-				player.properties << self
+				player.add_property(self)
 				@owner = player
 			end
 		end
@@ -92,7 +94,7 @@ module Monotony
 		# Offer to purchase this property from another player, thus calling the :trade_proposed behaviour of the receiving player.
 		def place_offer(proposer, amount)
 			if proposer.balance >= amount
-				property.sell_to(proposer, amount) if @owner.decide(:trade_proposed, game: @owner.game, player: @owner, proposer: proposer, property: self, amount: amount).is_yes?
+				sell_to(proposer, amount) if @owner.decide(:consider_proposed_trade, game: @owner.game, player: @owner, proposer: proposer, property: self, amount: amount).is_yes?
 			end
 		end
 
@@ -119,7 +121,7 @@ module Monotony
 
 		# Mortgage the property to raise cash for its owner.
 		# @return [self]
-		def mortgage
+		def mortgage!
 			unless is_mortgaged?
 				@owner.game.log '[%s] Mortgaged %s for £%d' % [ @owner.name, @name, @mortgage_value ]
 				@is_mortgaged = true
@@ -131,7 +133,7 @@ module Monotony
 
 		# Unmortgage the property.
 		# @return [self]
-		def unmortgage
+		def unmortgage!
 			if is_mortgaged?
 				if @owner.balance > cost
 					@owner.game.log '[%s] Unmortgaged %s for £%d' % [ @owner.name, @name, cost ]
@@ -141,7 +143,7 @@ module Monotony
 					@owner.game.log '[%s] Unable to unmortgage %s (not enough funds)' % [ @owner.name, @name ]
 				end
 			else
-				@owner.game.log '[%] Tried to unmortgage a non-mortgaged property (%s)' % [ @owner.name, @name ]
+				@owner.game.log '[%s] Tried to unmortgage a non-mortgaged property (%s)' % [ @owner.name, @name ]
 			end
 			self
 		end
