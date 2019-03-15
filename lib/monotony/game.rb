@@ -160,7 +160,7 @@ module Monotony
 
 		# @return [Game] a clone of the current game object for forecasting purposes.
 		def simulate
-			simulation = self.dclone
+			simulation = self.clone
 			simulation.is_simulation = true
 			simulation
 		end
