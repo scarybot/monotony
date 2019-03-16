@@ -1,7 +1,7 @@
 module Monotony
 
 	# Represents any landable square on the board.
-	class Square
+	class BoardSquare
 		include DeepDive
 		attr_accessor :action, :name, :owner, :colour, :display_name, :display_class, :is_simulation, :game
 
@@ -27,7 +27,7 @@ module Monotony
 			@display_name = opts[:display_name] || opts[:name]
 			@display_class = opts[:display_class] || 'square'
 			@action = opts[:action]
-			@colour = opts[:colour] || ( String.colors.include? opts[:set] ? opts[:set] : :light_black )
+			@colour = opts[:colour] || ( String.colors.include? opts[:set] ? opts[:set] : '#ecfcf4' )
 			@is_simulation = false
 			@game = nil
 		end

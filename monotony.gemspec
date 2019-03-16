@@ -28,6 +28,9 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'deep_dive'
   spec.add_dependency 'colorize'
+  spec.add_dependency 'ruby2d'
+  spec.add_dependency 'pry'
+  spec.add_dependency 'rb-readline'
 
   spec.add_development_dependency "bundler", "~> 1.10"
   spec.add_development_dependency "rake", "~> 10.0"

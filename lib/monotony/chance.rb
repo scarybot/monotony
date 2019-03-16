@@ -3,7 +3,7 @@ require 'monotony/square'
 module Monotony
 
 	# A chance square.
-	class Chance < Square
+	class Chance < BoardSquare
 
 		# @param [Hash] opts
 		# @option opts [String] :name The name of the square. As chance squares are traditionally all called 'Chance', in the default layout we are calling these squares 'Chance 1', 'Chance 2', etc.
@@ -25,8 +25,8 @@ module Monotony
 				player.move('Marylebone Station')
 			when 'Advance to Mayfair'
 				player.move('Mayfair')
-			when 'Advance to Trafalgar Square'
-				player.move('Trafalgar Square')
+			when 'Advance to Trafalgar BoardSquare'
+				player.move('Trafalgar BoardSquare')
 			when 'Advance to GO'
 				player.move('GO')
 			when 'Advance to Pall Mall'

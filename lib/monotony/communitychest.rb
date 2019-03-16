@@ -3,7 +3,7 @@ require 'monotony/square'
 module Monotony
 
 	# A community chest square.
-	class CommunityChest < Square
+	class CommunityChest < BoardSquare
 
 		# @param [Hash] opts
 		# @option opts [String] :name the name of the square. As community chest squares are traditionally all called 'Community Chest', in the default layout we are calling these squares 'Community Chest 1', 'Community Chest 2', etc.

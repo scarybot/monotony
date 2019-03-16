@@ -27,7 +27,7 @@ module Monotony
 			'Speeding fine (£15)',
 			'Advance to Mayfair',
 			'Make general repairs on all of your houses. For each house pay £25, and for each hotel pay £100.',
-			'Advance to Trafalgar Square',
+			'Advance to Trafalgar BoardSquare',
 			'You are assessed for street repairs. £40 per house, £115 per hotel.',
 			'Pay school fees of £150',
 			'Advance to GO',
@@ -39,9 +39,9 @@ module Monotony
 			'You have won a crossword competition (£100)'
 		]
 
-		# The game board layout, consisting of an array of Squares.
+		# The game board layout, consisting of an array of BoardSquares.
 		BOARD = [
-			Square.new(
+			BoardSquare.new(
 				name: 'GO',
 				display_class: 'bigsquare',
 				action: Proc.new { |game, owner, player, property|
@@ -57,13 +57,12 @@ module Monotony
 				mortgage_value: 30,
 				value: 60,
 				set: :brown,
-				colour: :yellow
+				colour: '#8b4513'
 			),
 
 			CommunityChest.new(
 				name: 'Community Chest 1',
-				display_name: 'Community Chest',
-				colour: :light_cyan
+				display_name: 'Community Chest'
 			),
 
 			BasicProperty.new(
@@ -74,12 +73,12 @@ module Monotony
 				mortgage_value: 30,
 				value: 60,
 				set: :brown,
-				colour: :yellow
+				colour: '#8b4513'
 			),
 
-			Square.new(
+			BoardSquare.new(
 				name: 'Income Tax',
-				colour: :light_black,
+				colour: '#ecfcf4',
 				action: Proc.new { |game, owner, player, property|
 					Transaction.new(from: player, to: game.bank, reason: 'income tax', amount: 200)
 				}
@@ -88,8 +87,7 @@ module Monotony
 			Station.new(
 				name: "King's Cross Station",
 				value: 200,
-				mortgage_value: 100,
-				colour: :light_blue
+				mortgage_value: 100
 			),
 
 			BasicProperty.new(
@@ -100,13 +98,12 @@ module Monotony
 				mortgage_value: 50,
 				value: 100,
 				set: :blue,
-				colour: :blue
+				colour: '#7ec0ee'
 			),
 
 			Chance.new(
 				name: 'Chance 1',
-				display_name: 'Chance',
-				colour: :light_cyan
+				display_name: 'Chance'
 			),
 
 			BasicProperty.new(
@@ -117,7 +114,7 @@ module Monotony
 				mortgage_value: 50,
 				value: 100,
 				set: :blue,
-				colour: :blue
+				colour: '#7ec0ee'
 			),
 
 			BasicProperty.new(
@@ -128,13 +125,12 @@ module Monotony
 				mortgage_value: 60,
 				value: 120,
 				set: :blue,
-				colour: :blue
+				colour: '#7ec0ee'
 			),
 
-			Square.new(
+			BoardSquare.new(
 				name: 'Jail',
-				display_class: 'bigsquare',
-				colour: :light_black
+				display_class: 'bigsquare'
 			),
 
 			BasicProperty.new(
@@ -145,14 +141,13 @@ module Monotony
 				mortgage_value: 70,
 				value: 140,
 				set: :pink,
-				colour: :light_magenta
+				colour: '#9932cc'
 			),
 
 			Utility.new(
 				name: 'Electric Company',
 				value: 150,
-				mortgage_value: 75,
-				colour: :cyan
+				mortgage_value: 75
 			),
 
 			BasicProperty.new(
@@ -163,8 +158,7 @@ module Monotony
 				mortgage_value: 70,
 				value: 140,
 				set: :pink,
-				colour: :light_magenta
-
+				colour: '#9932cc'
 			),
 
 			BasicProperty.new(
@@ -175,14 +169,13 @@ module Monotony
 				mortgage_value: 80,
 				value: 160,
 				set: :pink,
-				colour: :light_magenta
+				colour: '#9932cc'
 			),
 
 			Station.new(
 				name: 'Marylebone Station',
 				value: 200,
-				mortgage_value: 100,
-				colour: :light_blue
+				mortgage_value: 100
 			),
 
 			BasicProperty.new(
@@ -193,14 +186,13 @@ module Monotony
 				mortgage_value: 90,
 				value: 180,
 				set: :orange,
-				colour: :light_red
+				colour: '#ffa500'
 			),
 
 			CommunityChest.new(
 				name: 'Community Chest 2',
 				display_name: 'Community Chest',
-				set: :communitychest,
-				colour: :light_cyan
+				set: :communitychest
 			),
 
 			BasicProperty.new(
@@ -211,7 +203,7 @@ module Monotony
 				mortgage_value: 90,
 				value: 180,
 				set: :orange,
-				colour: :light_red
+				colour: '#ffa500'
 			),
 
 			BasicProperty.new(
@@ -222,13 +214,12 @@ module Monotony
 				mortgage_value: 100,
 				value: 200,
 				set: :orange,
-				colour: :light_red
+				colour: '#ffa500'
 			),
 
-			Square.new(
+			BoardSquare.new(
 				name: 'Free Parking',
 				display_class: 'bigsquare',
-				colour: :white,
 				action: Proc.new { |game, owner, player, property|
 					game.payout_free_parking(player)
 				}
@@ -247,8 +238,7 @@ module Monotony
 
 			Chance.new(
 				name: 'Chance 2',
-				display_name: 'Chance',
-				colour: :light_cyan
+				display_name: 'Chance'
 			),
 
 			BasicProperty.new(
@@ -263,7 +253,7 @@ module Monotony
 			),
 
 			BasicProperty.new(
-				name: 'Trafalgar Square',
+				name: 'Trafalgar BoardSquare',
 				rent: [ 20, 100, 300, 750, 925, 1100 ],
 				house_cost: 150,
 				hotel_cost: 150,
@@ -276,8 +266,7 @@ module Monotony
 			Station.new(
 				name: 'Fenchurch St Station',
 				value: 200,
-				mortgage_value: 100,
-				colour: :light_blue
+				mortgage_value: 100
 			),
 
 			BasicProperty.new(
@@ -305,8 +294,7 @@ module Monotony
 			Utility.new(
 				name: 'Water Works',
 				value: 150,
-				mortgage_value: 75,
-				colour: :cyan
+				mortgage_value: 75
 			),
 
 			BasicProperty.new(
@@ -320,10 +308,9 @@ module Monotony
 				colour: :yellow
 			),
 
-			Square.new(
+			BoardSquare.new(
 				name: 'Go to Jail',
 				display_class: 'bigsquare',
-				colour: :light_black,
 				action: Proc.new { |game, owner, player, property|
 					player.in_jail = true
 					player.move('Jail')
@@ -355,8 +342,7 @@ module Monotony
 
 			CommunityChest.new(
 				name: 'Community Chest 3',
-				display_name: 'Community Chest',
-				colour: :light_cyan
+				display_name: 'Community Chest'
 			),
 
 			BasicProperty.new(
@@ -373,14 +359,12 @@ module Monotony
 			Station.new(
 				name: 'Liverpool St Station',
 				value: 200,
-				mortgage_value: 100,
-				colour: :light_blue
+				mortgage_value: 100
 			),
 
 			Chance.new(
 				name: 'Chance 3',
-				display_name: 'Chance',
-				colour: :light_cyan
+				display_name: 'Chance'
 			),
 
 			BasicProperty.new(
@@ -391,10 +375,10 @@ module Monotony
 				mortgage_value: 175,
 				value: 350,
 				set: :purple,
-				colour: :magenta
+				colour: :blue
 			),
 
-			Square.new(
+			BoardSquare.new(
 				name: 'Super Tax',
 				action: Proc.new {|game, owner, player, property| 
 					Transaction.new(from: player, to: game.bank, reason: 'super tax', amount: 100)
@@ -409,7 +393,7 @@ module Monotony
 				mortgage_value: 200,
 				value: 400,
 				set: :purple,
-				colour: :magenta
+				colour: :blue
 			)
 		]
 	end

@@ -4,6 +4,7 @@ require 'pp'
 require 'logger'
 require 'colorize'
 require 'deep_dive'
+require 'ruby2d'
 
 require 'monotony/basicproperty'
 require 'monotony/chance'

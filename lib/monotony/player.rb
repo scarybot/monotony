@@ -72,7 +72,7 @@ module Monotony
 		# Moves a player on the game board.
 		# @param [Integer] n Number of squares to move.
 		# @param [Symbol] direction :forwards or :backwards.
-		# @return [Square] the square the player has landed on.
+		# @return [BoardSquare] the square the player has landed on.
 		def move(n = 1, direction = :forwards)
 			direction = direction.to_sym
 			n = @board.collect(&:name).find_index(n) if n.is_a? String
@@ -100,7 +100,7 @@ module Monotony
 			@board[0]
 		end
 
-		# @return [Square] The square this player is currently on.
+		# @return [BoardSquare] The square this player is currently on.
 		def current_square
 			@board[0]
 		end

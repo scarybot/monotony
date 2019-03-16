@@ -2,7 +2,7 @@ require 'monotony/square'
 
 module Monotony
 	# Represents any purchasable property tile.
-	class PurchasableProperty < Square
+	class PurchasableProperty < BoardSquare
 		attr_accessor :value, :cost, :is_mortgaged, :owner, :mortgage_value
 		# @param opts [Hash]
 		# @option opts [Integer] :value the value of the property.
@@ -70,7 +70,7 @@ module Monotony
 		end
 
 		# Returns property objects for all properties in the same set as self.
-		# @return [Array<Square>]
+		# @return [Array<BoardSquare>]
 		def properties_in_set(game = @owner.game)
 			game.board.select { |p| p.is_a? self.class }.select { |p| p.set == @set }
 		end

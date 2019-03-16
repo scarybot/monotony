@@ -3,9 +3,9 @@ module Monotony
 	class Game
     include DeepDive
 
-		# @return [Hash] a hash containing the number of times each Square has been landed on.
+		# @return [Hash] a hash containing the number of times each BoardSquare has been landed on.
 		attr_accessor :hits
-		# @return [Array<Square>] the current game board.
+		# @return [Array<BoardSquare>] the current game board.
 		attr_accessor :board
 		# @return [Boolean] players registered to the game.
 		attr_accessor :players
@@ -42,6 +42,8 @@ module Monotony
 		# @return [Account] the Account holding the currency held on free parking (in some game variants).
 		attr_reader :free_parking
 
+		attr_accessor :window
+
 		# Creates a new Monopoly game
 		# @param [Hash] opts Game configuration options
 		# @option opts [Integer] :free_parking_balance The amount of money stored on Free Parking at the beginning of the game (unofficial game feature in widespread use).
@@ -73,7 +75,6 @@ module Monotony
 			@board = opts[:variant]::BOARD
 			@chance_all = opts[:variant]::CHANCE
 			@community_chest_all = opts[:variant]::COMMUNITY_CHEST
-
 			@hits = {}
 			@turn = 0
 			@max_turns_in_jail = opts[:max_turns_in_jail].to_int
@@ -163,6 +164,38 @@ module Monotony
 			simulation = self.clone
 			simulation.is_simulation = true
 			simulation
+		end
+
+
+		def draw_board
+			row_x = []
+
+			@board.each_slice(10).with_index do |slice, row|
+				row_x[row] = 10
+				slice.each.with_index do |property, i|
+					if property.display_class == 'bigsquare'
+						width = 105
+					else
+						width = 80
+					end
+
+					case row
+						when 0
+							@window << [:add, Rectangle.new(x: row_x[row], y: 10, width: width, height: 105, color: (property.colour || '#ecfcf4').to_s, z: 1) ]
+							@window << [:add, Text.new(property.name, x: row_x[row]+5, y: 10+5, color: 'black', size: 7, z: 10) ]
+							row_x[row] = row_x[row] + width + 5
+						when 1
+							@window << [:add, Rectangle.new(x: row_x[row-1], y: row_x[row], width: 105, height: width, color: (property.colour || '#ecfcf4').to_s, z: 1) ]
+							@window << [:add, Text.new(property.name, x: row_x[row-1]+(width-5), y: row_x[row]+20, color: 'black', size: 7, rotate: 90, z: 10) ]
+							row_x[row] = row_x[row] + width + 5
+						when 2
+							@window << [:add, Rectangle.new(x: row_x[row-1] - row_x[row], y: (9*85)+110+10, width: width, height: 105, color: (property.colour || '#ecfcf4').to_s, z: 1) ]
+							@window << [:add, Text.new(property.name, x: row_x[row-1] - row_x[row]+5, y: (9*85)+110+10+80, color: 'black', size: 7, z: 10) ]
+							row_x[row] = row_x[row] + width + 5
+						when 3
+					end
+				end
+			end
 		end
 
 		# Produces a colourful ASCII representation of the state of the game board to standard output.
@@ -265,9 +298,9 @@ module Monotony
 		#     game.play
 		# @example Play through 10 turns
 		#     game.play(10)
+
 		def play(turns = 100000)
 			turns = turns.to_int
-
 			if @completed
 				log 'Game is complete!'
 				return false
@@ -275,6 +308,7 @@ module Monotony
 
 			turns.times do
 				@turn = @turn + 1
+				draw_board
 				log '- Turn %d begins!' % @turn
 				@players.each do |current_player|
 					if current_player.is_out?
