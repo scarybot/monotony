@@ -26,7 +26,7 @@ To play a quick game of Monopoly, with classic board layout and four randomly ge
 
 ```ruby
 
-    game = Monotony::Game.new
+    game = Monotony::Game.new({})
     game.play
 
     # See the results of the game
